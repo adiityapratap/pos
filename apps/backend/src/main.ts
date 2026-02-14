@@ -60,8 +60,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
+  // Bind to 0.0.0.0 for containerized environments (Railway, Docker)
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Application is running on: http://0.0.0.0:${port}/api`);
 }
 bootstrap();
 

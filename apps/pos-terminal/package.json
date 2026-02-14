@@ -11,9 +11,6 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@pos-saas/api-client": "workspace:*",
-    "@pos-saas/types": "workspace:*",
-    "@pos-saas/ui": "workspace:*",
     "axios": "^1.13.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

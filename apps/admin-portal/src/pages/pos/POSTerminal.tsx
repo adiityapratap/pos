@@ -44,7 +44,7 @@ interface CartItem {
 }
 
 const POSTerminal: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout: _logout } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');

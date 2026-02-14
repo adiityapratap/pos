@@ -287,7 +287,7 @@ export default function SubcategoriesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1">
-                      {getParentNames(subcategory).map((parentName, idx) => (
+                      {getParentNames(subcategory).map((parentName: string, idx: number) => (
                         <span
                           key={idx}
                           className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"

@@ -125,7 +125,7 @@ export default function DashboardPage() {
     }
   };
 
-  const getColorClasses = (color: string) => {
+  const _getColorClasses = (color: string) => {
     const colors: Record<string, string> = {
       blue: 'bg-blue-100 text-blue-600',
       green: 'bg-green-100 text-green-600',

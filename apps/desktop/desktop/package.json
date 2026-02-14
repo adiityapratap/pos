@@ -1,0 +1,26 @@
+{
+  "name": "bizpos-desktop",
+  "version": "1.0.0",
+  "description": "BIZPOS - Modern Point of Sale Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "electron": "electron .",
+    "start": "concurrently \"npm run frontend:dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "frontend:dev": "cd ../frontend && npm run dev",
+    "backend:dev": "cd ../backend && npm run start:dev",
+    "dev": "concurrently \"npm run backend:dev\" \"npm run start\"",
+    "build": "cd ../frontend && npm run build"
+  },
+  "keywords": ["pos", "point-of-sale", "bizpos", "restaurant", "retail"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.1.0",
+    "wait-on": "^9.0.3"
+  }
+}

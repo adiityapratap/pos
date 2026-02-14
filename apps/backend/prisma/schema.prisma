@@ -1,0 +1,1419 @@
+// =====================================================================
+// PRODUCTION-READY MULTI-TENANT POS DATABASE SCHEMA (Prisma)
+// =====================================================================
+// Optimized for 1000+ tenants with single shared database
+// Based on: Toast POS, Square, Lightspeed, Shift8 architecture
+// Database: PostgreSQL 14+ (recommended for performance)
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// SECTION 1: CORE TENANT & MULTI-LOCATION
+// =====================================================================
+
+model Tenant {
+  id                   String    @id @default(uuid()) @db.Uuid
+  // Business Info
+  businessName         String    @map("business_name") @db.VarChar(255)
+  subdomain            String    @unique @db.VarChar(100)
+  legalEntityName      String?   @map("legal_entity_name") @db.VarChar(255)
+  // Subscription & Plan
+  planType             String    @default("starter") @map("plan_type") @db.VarChar(50)
+  subscriptionStatus   String    @default("trial") @map("subscription_status") @db.VarChar(50)
+  subscriptionStartedAt DateTime @default(now()) @map("subscription_started_at") @db.Timestamptz(6)
+  subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
+  trialEndsAt          DateTime? @map("trial_ends_at") @db.Timestamptz(6)
+  // Billing
+  currencyCode         String    @default("USD") @map("currency_code") @db.Char(3)
+  timezone             String    @default("UTC") @db.VarChar(100)
+  countryCode          String    @map("country_code") @db.Char(2)
+  taxId                String?   @map("tax_id") @db.VarChar(100)
+  // Database Sharding
+  dbShardKey           String?   @default("primary") @map("db_shard_key") @db.VarChar(50)
+  // Features & Limits
+  maxLocations         Int?      @default(1) @map("max_locations")
+  maxUsers             Int?      @default(5) @map("max_users")
+  maxProducts          Int?      @default(100) @map("max_products")
+  features             Json?     @default("{\"kds\": false, \"loyalty\": false, \"analytics\": true}")
+  // Security
+  isActive             Boolean   @default(true) @map("is_active")
+  isLocked             Boolean   @default(false) @map("is_locked")
+  lockedReason         String?   @map("locked_reason")
+  // Metadata
+  metadata             Json?     @default("{}")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  locations            Location[]
+  users                User[]
+  categories           Category[]
+  products             Product[]
+  modifierGroups       ModifierGroup[]
+  modifiers            Modifier[]
+  orders               Order[]
+  promotions           Promotion[]
+  vouchers             Voucher[]
+  loyaltyRules         LoyaltyRule[]
+  customers            Customer[]
+  inventoryItems       InventoryItem[]
+  terminals            Terminal[]
+  dailySalesSummary    DailySalesSummary[]
+  auditLogs            AuditLog[]
+  productLocationPrices ProductLocationPrice[]
+  productModifierGroups ProductModifierGroup[]
+  comboItems           ComboItem[]
+  orderItems           OrderItem[]
+  orderItemModifiers   OrderItemModifier[]
+  payments             Payment[]
+  voucherTransactions  VoucherTransaction[]
+  orderPromotions      OrderPromotion[]
+  loyaltyTransactions  LoyaltyTransaction[]
+  recipes              Recipe[]
+  inventoryAdjustments InventoryAdjustment[]
+  categoryRelationships CategoryRelationship[]
+  categoryLocations    CategoryLocation[]
+  productLocations     ProductLocation[]
+  modifierGroupLocations ModifierGroupLocation[]
+  modifierLocations    ModifierLocation[]
+  comboLocations       ComboLocation[]
+
+  @@index([subdomain], name: "idx_tenants_subdomain")
+  @@index([subscriptionStatus, isActive], name: "idx_tenants_status")
+  @@index([dbShardKey], name: "idx_tenants_shard")
+  @@map("tenants")
+}
+
+model Location {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  // Location Info
+  name             String    @db.VarChar(255)
+  code             String?   @db.VarChar(50)
+  locationType     String?   @default("restaurant") @map("location_type") @db.VarChar(50)
+  // Address
+  addressLine1     String?   @map("address_line1") @db.VarChar(255)
+  addressLine2     String?   @map("address_line2") @db.VarChar(255)
+  city             String?   @db.VarChar(100)
+  state            String?   @db.VarChar(100)
+  postalCode       String?   @map("postal_code") @db.VarChar(20)
+  countryCode      String?   @map("country_code") @db.Char(2)
+  latitude         Decimal?  @db.Decimal(10, 8)
+  longitude        Decimal?  @db.Decimal(11, 8)
+  // Contact
+  phone            String?   @db.VarChar(50)
+  email            String?   @db.VarChar(255)
+  // Business Hours
+  businessHours    Json?     @default("{}") @map("business_hours")
+  // Settings
+  timezone         String?   @db.VarChar(100)
+  currencyCode     String?   @map("currency_code") @db.Char(3)
+  taxSettings      Json?     @default("{}") @map("tax_settings")
+  receiptSettings  Json?     @default("{}") @map("receipt_settings")
+  // Status
+  isActive         Boolean   @default(true) @map("is_active")
+  openedAt         DateTime? @map("opened_at") @db.Timestamptz(6)
+  closedAt         DateTime? @map("closed_at") @db.Timestamptz(6)
+  // Metadata
+  metadata         Json?     @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders           Order[]
+  terminals        Terminal[]
+  dailySalesSummary DailySalesSummary[]
+  inventoryItems   InventoryItem[]
+  inventoryAdjustments InventoryAdjustment[]
+  productLocationPrices ProductLocationPrice[]
+  categoryLocations CategoryLocation[] @relation("CategoryLocations")
+  productLocations ProductLocation[] @relation("ProductLocations")
+  modifierGroupLocations ModifierGroupLocation[] @relation("ModifierGroupLocations")
+  modifierLocations ModifierLocation[] @relation("ModifierLocations")
+  comboLocations   ComboLocation[] @relation("ComboLocations")
+
+  @@unique([tenantId, name], name: "locations_tenant_name_unique")
+  @@index([tenantId], name: "idx_locations_tenant")
+  @@index([tenantId, code], name: "idx_locations_tenant_code")
+  @@map("locations")
+}
+
+// =====================================================================
+// SECTION 2: USER MANAGEMENT & AUTHENTICATION
+// =====================================================================
+
+model User {
+  id                   String    @id @default(uuid()) @db.Uuid
+  tenantId             String    @map("tenant_id") @db.Uuid
+  // User Info
+  email                String    @db.VarChar(255)
+  phone                String?   @db.VarChar(50)
+  firstName            String?   @map("first_name") @db.VarChar(100)
+  lastName             String?   @map("last_name") @db.VarChar(100)
+  displayName          String?   @map("display_name") @db.VarChar(255)
+  // Authentication
+  passwordHash         String?   @map("password_hash") @db.VarChar(255)
+  pinCodeHash          String?   @map("pin_code_hash") @db.VarChar(255)
+  // Role & Permissions
+  role                 String    @default("cashier") @db.VarChar(50)
+  permissions          Json?     @default("[]")
+  // Employment
+  employeeCode         String?   @map("employee_code") @db.VarChar(50)
+  jobTitle             String?   @map("job_title") @db.VarChar(100)
+  hourlyRate           Decimal?  @map("hourly_rate") @db.Decimal(10, 2)
+  // Access Control
+  allowedLocations     String[]  @default([]) @map("allowed_locations") @db.Uuid
+  isActive             Boolean   @default(true) @map("is_active")
+  isLocked             Boolean   @default(false) @map("is_locked")
+  failedLoginAttempts  Int       @default(0) @map("failed_login_attempts")
+  lastLoginAt          DateTime? @map("last_login_at") @db.Timestamptz(6)
+  lastLoginIp          String?   @map("last_login_ip") @db.Inet
+  // Metadata
+  metadata             Json?     @default("{}")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ordersCreated        Order[]   @relation("OrderCreatedBy")
+  ordersAsCashier      Order[]   @relation("OrderCashier")
+  ordersAsServer       Order[]   @relation("OrderServer")
+  ordersVoided         Order[]   @relation("OrderVoidedBy")
+  orderItemsVoided     OrderItem[] @relation("OrderItemVoidedBy")
+  vouchersIssued       Voucher[] @relation("VoucherIssuedBy")
+  voucherTransactions  VoucherTransaction[]
+  paymentsProcessed    Payment[]
+  orderPromotionsAuthorized OrderPromotion[]
+  inventoryAdjustmentsAdjusted InventoryAdjustment[] @relation("AdjustedBy")
+  inventoryAdjustmentsApproved InventoryAdjustment[] @relation("ApprovedBy")
+  auditLogs            AuditLog[]
+
+  @@unique([tenantId, email], name: "users_tenant_email_unique")
+  @@index([tenantId], name: "idx_users_tenant")
+  @@index([tenantId, email], name: "idx_users_email")
+  @@index([tenantId, pinCodeHash], name: "idx_users_pin")
+  @@index([tenantId, role], name: "idx_users_role")
+  @@map("users")
+}
+
+// =====================================================================
+// SECTION 3: MENU STRUCTURE (Categories & Products)
+// =====================================================================
+
+model Category {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  parentId       String?   @map("parent_id") @db.Uuid
+  // Category Info
+  name           String    @db.VarChar(255)
+  displayName    String?   @map("display_name") @db.VarChar(255)
+  description    String?
+  // Ordering & Display
+  sortOrder      Int       @default(0) @map("sort_order")
+  colorHex       String?   @map("color_hex") @db.VarChar(7)
+  iconUrl        String?   @map("icon_url")
+  imageUrl       String?   @map("image_url")
+  // Availability
+  isActive       Boolean   @default(true) @map("is_active")
+  availableDays  Int[]     @default([0, 1, 2, 3, 4, 5, 6]) @map("available_days")
+  availableFrom  DateTime? @map("available_from") @db.Time(6)
+  availableTo    DateTime? @map("available_to") @db.Time(6)
+  // Metadata
+  metadata       Json?     @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parent         Category? @relation("CategorySubcategories", fields: [parentId], references: [id], onDelete: Cascade)
+  subcategories  Category[] @relation("CategorySubcategories")
+  products       Product[]
+  // Many-to-many relationships
+  parentRelationships CategoryRelationship[] @relation("ParentCategory")
+  subcategoryRelationships CategoryRelationship[] @relation("Subcategory")
+  categoryLocations CategoryLocation[]
+
+  @@unique([tenantId, name, parentId], name: "categories_tenant_name_unique")
+  @@index([tenantId], name: "idx_categories_tenant")
+  @@index([parentId], name: "idx_categories_parent")
+  @@index([tenantId, sortOrder], name: "idx_categories_sort")
+  @@map("categories")
+}
+
+// Junction table for category-location associations
+model CategoryLocation {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  locationId String   @map("location_id") @db.Uuid
+  isActive   Boolean  @default(true) @map("is_active")
+  sortOrder  Int      @default(0) @map("sort_order")
+  metadata   Json?    @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  location   Location @relation("CategoryLocations", fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locationId], name: "category_locations_unique")
+  @@index([categoryId], name: "idx_category_locations_category")
+  @@index([locationId], name: "idx_category_locations_location")
+  @@index([tenantId], name: "idx_category_locations_tenant")
+  @@map("category_locations")
+}
+
+model CategoryRelationship {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  parentCategoryId String   @map("parent_category_id") @db.Uuid
+  subcategoryId    String   @map("subcategory_id") @db.Uuid
+  sortOrder        Int?     @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parentCategory   Category @relation("ParentCategory", fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  subcategory      Category @relation("Subcategory", fields: [subcategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([parentCategoryId, subcategoryId], name: "category_relationships_parent_subcategory_unique")
+  @@index([parentCategoryId], name: "idx_category_relationships_parent")
+  @@index([subcategoryId], name: "idx_category_relationships_subcategory")
+  @@index([tenantId], name: "idx_category_relationships_tenant")
+  @@map("category_relationships")
+}
+
+model Product {
+  id                        String    @id @default(uuid()) @db.Uuid
+  tenantId                  String    @map("tenant_id") @db.Uuid
+  categoryId                String?   @map("category_id") @db.Uuid
+  // Product Info
+  name                      String    @db.VarChar(255)
+  displayName               String?   @map("display_name") @db.VarChar(255)
+  shortName                 String?   @map("short_name") @db.VarChar(100)
+  description               String?
+  pluNumber                 String?   @map("plu_number") @db.VarChar(50)
+  sku                       String?   @db.VarChar(100)
+  // Pricing
+  basePrice                 Decimal   @map("base_price") @db.Decimal(12, 4)
+  costPrice                 Decimal?  @map("cost_price") @db.Decimal(12, 4)
+  taxRate                   Decimal?  @map("tax_rate") @db.Decimal(5, 4)
+  taxIncluded               Boolean   @default(false) @map("tax_included")
+  // Product Type
+  productType               String    @default("standard") @map("product_type") @db.VarChar(50)
+  isCombo                   Boolean   @default(false) @map("is_combo")
+  parentProductId           String?   @map("parent_product_id") @db.Uuid
+  // Kitchen & Preparation
+  prepTimeMinutes           Int?      @default(0) @map("prep_time_minutes")
+  kitchenStation            String?   @map("kitchen_station") @db.VarChar(100)
+  cookingInstructions       String?   @map("cooking_instructions")
+  kdsDisplayName            String?   @map("kds_display_name") @db.VarChar(255)
+  kdsColor                  String?   @map("kds_color") @db.VarChar(7)
+  // Availability & Inventory
+  isActive                  Boolean   @default(true) @map("is_active")
+  availableForOnline        Boolean   @default(true) @map("available_for_online")
+  availableForPos           Boolean   @default(true) @map("available_for_pos")
+  availableDays             Int[]     @default([0, 1, 2, 3, 4, 5, 6]) @map("available_days")
+  availableFrom             DateTime? @map("available_from") @db.Time(6)
+  availableTo               DateTime? @map("available_to") @db.Time(6)
+  trackInventory            Boolean   @default(false) @map("track_inventory")
+  currentStock              Decimal?  @map("current_stock") @db.Decimal(10, 2)
+  lowStockThreshold         Decimal?  @map("low_stock_threshold") @db.Decimal(10, 2)
+  outOfStock                Boolean   @default(false) @map("out_of_stock")
+  // Display & Media
+  imageUrl                  String?   @map("image_url")
+  landscapeImageUrl         String?   @map("landscape_image_url")
+  sortOrder                 Int       @default(0) @map("sort_order")
+  colorHex                  String?   @map("color_hex") @db.VarChar(7)
+  // Features
+  isFavorite                Boolean   @default(false) @map("is_favorite")
+  featuredOnKiosk           Boolean   @default(false) @map("featured_on_kiosk")
+  excludeFromRecommendations Boolean  @default(false) @map("exclude_from_recommendations")
+  calories                  Int?
+  // Analytics Codes
+  analysisCode1             String?   @map("analysis_code_1") @db.VarChar(50)
+  analysisCode2             String?   @map("analysis_code_2") @db.VarChar(50)
+  reportCategory            String?   @map("report_category") @db.VarChar(100)
+  reportGroup               String?   @map("report_group") @db.VarChar(100)
+  // Barcodes
+  barcodes                  String[]  @default([])
+  // Notes
+  notesForPos               String?   @map("notes_for_pos")
+  notesForReceipt           String?   @map("notes_for_receipt")
+  // Metadata
+  metadata                  Json?     @default("{}")
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt                 DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant                    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category                  Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  parentProduct             Product?  @relation("ProductVariants", fields: [parentProductId], references: [id], onDelete: Cascade)
+  variants                  Product[] @relation("ProductVariants")
+  productLocations          ProductLocation[]
+  locationPrices            ProductLocationPrice[]
+  modifierGroups            ProductModifierGroup[]
+  comboItemsAsCombo         ComboItem[] @relation("ComboProduct")
+  comboItemsAsItem          ComboItem[] @relation("ComboItemProduct")
+  orderItems                OrderItem[]
+  recipes                   Recipe[]
+  promotionGetProduct       Promotion[]
+
+  @@unique([tenantId, name, categoryId], name: "products_tenant_name_category_unique")
+  @@index([tenantId], name: "idx_products_tenant")
+  @@index([tenantId, categoryId], name: "idx_products_category")
+  @@index([tenantId, pluNumber], name: "idx_products_plu")
+  @@index([tenantId, sku], name: "idx_products_sku")
+  @@index([parentProductId], name: "idx_products_parent")
+  @@index([tenantId, trackInventory, currentStock], name: "idx_products_stock")
+  @@map("products")
+}
+
+// Junction table for product-location associations (availability)
+model ProductLocation {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  productId  String   @map("product_id") @db.Uuid
+  locationId String   @map("location_id") @db.Uuid
+  isActive   Boolean  @default(true) @map("is_active")
+  metadata   Json?    @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location   Location @relation("ProductLocations", fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locationId], name: "product_locations_unique")
+  @@index([productId], name: "idx_product_locations_product")
+  @@index([locationId], name: "idx_product_locations_location")
+  @@index([tenantId], name: "idx_product_locations_tenant")
+  @@map("product_locations")
+}
+
+model ProductLocationPrice {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  productId  String   @map("product_id") @db.Uuid
+  locationId String   @map("location_id") @db.Uuid
+  // Pricing
+  price      Decimal  @db.Decimal(12, 4)
+  costPrice  Decimal? @map("cost_price") @db.Decimal(12, 4)
+  isActive   Boolean  @default(true) @map("is_active")
+  // Metadata
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locationId], name: "product_location_prices_unique")
+  @@index([productId], name: "idx_product_location_prices_product")
+  @@index([locationId], name: "idx_product_location_prices_location")
+  @@map("product_location_prices")
+}
+
+// =====================================================================
+// SECTION 4: MODIFIERS & OPTIONS
+// =====================================================================
+
+model ModifierGroup {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  // Group Info
+  name            String    @db.VarChar(255)
+  displayName     String?   @map("display_name") @db.VarChar(255)
+  shortName       String?   @map("short_name") @db.VarChar(100)
+  description     String?
+  // Rules
+  selectionType   String    @default("multiple") @map("selection_type") @db.VarChar(50)
+  isRequired      Boolean   @default(false) @map("is_required")
+  minSelections   Int       @default(0) @map("min_selections")
+  maxSelections   Int?      @map("max_selections")
+  // Display
+  sortOrder       Int       @default(0) @map("sort_order")
+  displayInWizard Boolean   @default(true) @map("display_in_wizard")
+  // Metadata
+  metadata        Json?     @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  modifiers       Modifier[]
+  modifierGroupLocations ModifierGroupLocation[]
+  productModifierGroups ProductModifierGroup[]
+  orderItemModifiers OrderItemModifier[]
+
+  @@unique([tenantId, name], name: "modifier_groups_tenant_name_unique")
+  @@index([tenantId], name: "idx_modifier_groups_tenant")
+  @@map("modifier_groups")
+}
+
+// Junction table for modifier group-location associations
+model ModifierGroupLocation {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  modifierGroupId String   @map("modifier_group_id") @db.Uuid
+  locationId      String   @map("location_id") @db.Uuid
+  isActive        Boolean  @default(true) @map("is_active")
+  metadata        Json?    @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  location        Location      @relation("ModifierGroupLocations", fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([modifierGroupId, locationId], name: "modifier_group_locations_unique")
+  @@index([modifierGroupId], name: "idx_modifier_group_locations_group")
+  @@index([locationId], name: "idx_modifier_group_locations_location")
+  @@index([tenantId], name: "idx_modifier_group_locations_tenant")
+  @@map("modifier_group_locations")
+}
+
+model Modifier {
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  groupId             String    @map("group_id") @db.Uuid
+  // Modifier Info
+  name                String    @db.VarChar(255)
+  displayName         String?   @map("display_name") @db.VarChar(255)
+  shortName           String?   @map("short_name") @db.VarChar(100)
+  description         String?
+  pluNumber           String?   @map("plu_number") @db.VarChar(50)
+  // Pricing
+  priceChange         Decimal   @default(0.00) @map("price_change") @db.Decimal(12, 4)
+  priceType           String    @default("add") @map("price_type") @db.VarChar(20)
+  costChange          Decimal   @default(0.00) @map("cost_change") @db.Decimal(12, 4)
+  // Kitchen
+  affectsPreparation  Boolean   @default(false) @map("affects_preparation")
+  kitchenInstructions String?   @map("kitchen_instructions")
+  // Display
+  sortOrder           Int       @default(0) @map("sort_order")
+  isActive            Boolean   @default(true) @map("is_active")
+  isDefault           Boolean   @default(false) @map("is_default")
+  // Inventory Impact
+  inventoryItemId     String?   @map("inventory_item_id") @db.Uuid
+  inventoryQtyUsed    Decimal?  @map("inventory_qty_used") @db.Decimal(10, 4)
+  // Metadata
+  metadata            Json?     @default("{}")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  group               ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  modifierLocations   ModifierLocation[]
+  orderItemModifiers  OrderItemModifier[]
+
+  @@unique([groupId, name], name: "modifiers_group_name_unique")
+  @@index([tenantId], name: "idx_modifiers_tenant")
+  @@index([groupId], name: "idx_modifiers_group")
+  @@index([tenantId, pluNumber], name: "idx_modifiers_plu")
+  @@map("modifiers")
+}
+
+// Junction table for modifier-location associations
+model ModifierLocation {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  modifierId String   @map("modifier_id") @db.Uuid
+  locationId String   @map("location_id") @db.Uuid
+  isActive   Boolean  @default(true) @map("is_active")
+  priceOverride Decimal? @map("price_override") @db.Decimal(12, 4)
+  metadata   Json?    @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  modifier   Modifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
+  location   Location @relation("ModifierLocations", fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([modifierId, locationId], name: "modifier_locations_unique")
+  @@index([modifierId], name: "idx_modifier_locations_modifier")
+  @@index([locationId], name: "idx_modifier_locations_location")
+  @@index([tenantId], name: "idx_modifier_locations_tenant")
+  @@map("modifier_locations")
+}
+
+model ProductModifierGroup {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  productId       String   @map("product_id") @db.Uuid
+  modifierGroupId String   @map("modifier_group_id") @db.Uuid
+  // Rules
+  isRequired      Boolean? @map("is_required")
+  minSelections   Int?     @map("min_selections")
+  maxSelections   Int?     @map("max_selections")
+  sortOrder       Int      @default(0) @map("sort_order")
+  isActive        Boolean  @default(true) @map("is_active")
+  // Metadata
+  metadata        Json?    @default("{}")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, modifierGroupId], name: "product_modifier_groups_unique")
+  @@index([productId], name: "idx_product_modifier_groups_product")
+  @@index([modifierGroupId], name: "idx_product_modifier_groups_group")
+  @@map("product_modifier_groups")
+}
+
+// =====================================================================
+// SECTION 5: COMBO/MEAL DEALS
+// =====================================================================
+
+model ComboItem {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  comboProductId  String   @map("combo_product_id") @db.Uuid
+  itemProductId   String   @map("item_product_id") @db.Uuid
+  // Combo Rules
+  quantity        Int      @default(1)
+  isOptional      Boolean  @default(false) @map("is_optional")
+  priceOverride   Decimal? @map("price_override") @db.Decimal(12, 4)
+  // Selection Rules
+  selectionGroup  String?  @map("selection_group") @db.VarChar(100)
+  maxQuantity     Int?     @map("max_quantity")
+  // Display
+  sortOrder       Int      @default(0) @map("sort_order")
+  // Metadata
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  comboProduct    Product  @relation("ComboProduct", fields: [comboProductId], references: [id], onDelete: Cascade)
+  itemProduct     Product  @relation("ComboItemProduct", fields: [itemProductId], references: [id], onDelete: Cascade)
+  comboLocations  ComboLocation[]
+
+  @@unique([comboProductId, itemProductId], name: "combo_items_unique")
+  @@index([comboProductId], name: "idx_combo_items_combo")
+  @@index([itemProductId], name: "idx_combo_items_item")
+  @@map("combo_items")
+}
+
+// Junction table for combo-location associations
+model ComboLocation {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  comboItemId    String    @map("combo_item_id") @db.Uuid
+  locationId     String    @map("location_id") @db.Uuid
+  isActive       Boolean   @default(true) @map("is_active")
+  metadata       Json?     @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  comboItem      ComboItem @relation(fields: [comboItemId], references: [id], onDelete: Cascade)
+  location       Location  @relation("ComboLocations", fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([comboItemId, locationId], name: "combo_locations_unique")
+  @@index([comboItemId], name: "idx_combo_locations_combo")
+  @@index([locationId], name: "idx_combo_locations_location")
+  @@index([tenantId], name: "idx_combo_locations_tenant")
+  @@map("combo_locations")
+}
+
+// =====================================================================
+// SECTION 6: ORDERS & TRANSACTIONS
+// =====================================================================
+
+model Order {
+  id                   String    @id @default(uuid()) @db.Uuid
+  tenantId             String    @map("tenant_id") @db.Uuid
+  locationId           String    @map("location_id") @db.Uuid
+  // Order Identification
+  orderNumber          String    @map("order_number") @db.VarChar(50)
+  displayNumber        String?   @map("display_number") @db.VarChar(20)
+  externalOrderId      String?   @map("external_order_id") @db.VarChar(255)
+  // Order Type
+  orderType            String    @default("dine_in") @map("order_type") @db.VarChar(50)
+  orderSource          String    @default("pos") @map("order_source") @db.VarChar(50)
+  // Customer
+  customerId           String?   @map("customer_id") @db.Uuid
+  customerName         String?   @map("customer_name") @db.VarChar(255)
+  customerPhone        String?   @map("customer_phone") @db.VarChar(50)
+  customerEmail        String?   @map("customer_email") @db.VarChar(255)
+  // Delivery Info
+  deliveryAddress      Json?     @map("delivery_address")
+  deliveryInstructions String?   @map("delivery_instructions")
+  deliveryFee          Decimal?  @map("delivery_fee") @db.Decimal(10, 2)
+  deliveryDriverId     String?   @map("delivery_driver_id") @db.Uuid
+  // Table/Station Info
+  tableNumber          String?   @map("table_number") @db.VarChar(50)
+  seatNumber           String?   @map("seat_number") @db.VarChar(20)
+  stationName          String?   @map("station_name") @db.VarChar(100)
+  // Staff
+  createdByUserId      String    @map("created_by_user_id") @db.Uuid
+  cashierUserId        String?   @map("cashier_user_id") @db.Uuid
+  serverUserId         String?   @map("server_user_id") @db.Uuid
+  // Financial
+  subtotal             Decimal   @default(0.00) @map("subtotal") @db.Decimal(12, 4)
+  discountAmount       Decimal   @default(0.00) @map("discount_amount") @db.Decimal(12, 4)
+  taxAmount            Decimal   @default(0.00) @map("tax_amount") @db.Decimal(12, 4)
+  tipAmount            Decimal   @default(0.00) @map("tip_amount") @db.Decimal(12, 4)
+  serviceCharge        Decimal   @default(0.00) @map("service_charge") @db.Decimal(12, 4)
+  totalAmount          Decimal   @default(0.00) @map("total_amount") @db.Decimal(12, 4)
+  amountPaid           Decimal   @default(0.00) @map("amount_paid") @db.Decimal(12, 4)
+  amountDue            Decimal   @default(0.00) @map("amount_due") @db.Decimal(12, 4)
+  roundingAmount       Decimal   @default(0.00) @map("rounding_amount") @db.Decimal(12, 4)
+  // Status
+  orderStatus          String    @default("draft") @map("order_status") @db.VarChar(50)
+  paymentStatus        String    @default("unpaid") @map("payment_status") @db.VarChar(50)
+  fulfillmentStatus    String?   @map("fulfillment_status") @db.VarChar(50)
+  // Kitchen Status
+  sentToKitchenAt      DateTime? @map("sent_to_kitchen_at") @db.Timestamptz(6)
+  kitchenCompletedAt   DateTime? @map("kitchen_completed_at") @db.Timestamptz(6)
+  estimatedReadyTime   DateTime? @map("estimated_ready_time") @db.Timestamptz(6)
+  // Completion
+  completedAt          DateTime? @map("completed_at") @db.Timestamptz(6)
+  voidedAt             DateTime? @map("voided_at") @db.Timestamptz(6)
+  voidReason           String?   @map("void_reason")
+  voidedByUserId       String?   @map("voided_by_user_id") @db.Uuid
+  // Notes
+  customerNotes        String?   @map("customer_notes")
+  internalNotes        String?   @map("internal_notes")
+  // Hold/Fire Logic
+  isOnHold             Boolean   @default(false) @map("is_on_hold")
+  holdReason           String?   @map("hold_reason")
+  fireTime             DateTime? @map("fire_time") @db.Timestamptz(6)
+  // Split Bill
+  isSplit              Boolean   @default(false) @map("is_split")
+  splitParentOrderId   String?   @map("split_parent_order_id") @db.Uuid
+  splitNumber          Int?      @map("split_number")
+  // Metadata
+  metadata             Json?     @default("{}")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location             Location  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  createdByUser        User      @relation("OrderCreatedBy", fields: [createdByUserId], references: [id])
+  cashierUser          User?     @relation("OrderCashier", fields: [cashierUserId], references: [id])
+  serverUser           User?     @relation("OrderServer", fields: [serverUserId], references: [id])
+  voidedByUser         User?     @relation("OrderVoidedBy", fields: [voidedByUserId], references: [id])
+  customer             Customer? @relation(fields: [customerId], references: [id])
+  splitParentOrder     Order?    @relation("OrderSplits", fields: [splitParentOrderId], references: [id])
+  splitOrders          Order[]   @relation("OrderSplits")
+  orderItems           OrderItem[]
+  payments             Payment[]
+  voucherTransactions  VoucherTransaction[]
+  orderPromotions      OrderPromotion[]
+  loyaltyTransactions  LoyaltyTransaction[]
+
+  @@unique([tenantId, locationId, orderNumber], name: "orders_tenant_order_number_unique")
+  @@index([tenantId, locationId], name: "idx_orders_tenant_location")
+  @@index([tenantId, orderStatus, paymentStatus], name: "idx_orders_status")
+  @@index([tenantId, createdAt], name: "idx_orders_created_date")
+  @@index([tenantId, orderNumber], name: "idx_orders_number")
+  @@index([customerId], name: "idx_orders_customer")
+  @@index([tenantId, orderStatus], name: "idx_orders_kitchen")
+  @@index([tenantId, paymentStatus], name: "idx_orders_unpaid")
+  @@map("orders")
+}
+
+model OrderItem {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  orderId           String    @map("order_id") @db.Uuid
+  productId         String    @map("product_id") @db.Uuid
+  // Item Details
+  itemName          String    @map("item_name") @db.VarChar(255)
+  itemSku           String?   @map("item_sku") @db.VarChar(100)
+  // Pricing
+  unitPrice         Decimal   @map("unit_price") @db.Decimal(12, 4)
+  quantity          Decimal   @default(1.000) @db.Decimal(10, 3)
+  discountAmount    Decimal   @default(0.00) @map("discount_amount") @db.Decimal(12, 4)
+  taxAmount         Decimal   @default(0.00) @map("tax_amount") @db.Decimal(12, 4)
+  taxRate           Decimal?  @map("tax_rate") @db.Decimal(5, 4)
+  lineTotal         Decimal   @map("line_total") @db.Decimal(12, 4)
+  costPrice         Decimal?  @map("cost_price") @db.Decimal(12, 4)
+  // Kitchen
+  kitchenStation    String?   @map("kitchen_station") @db.VarChar(100)
+  cookingInstructions String? @map("cooking_instructions")
+  prepStatus        String    @default("pending") @map("prep_status") @db.VarChar(50)
+  prepStartedAt     DateTime? @map("prep_started_at") @db.Timestamptz(6)
+  prepCompletedAt   DateTime? @map("prep_completed_at") @db.Timestamptz(6)
+  // Course Timing
+  courseNumber      Int       @default(1) @map("course_number")
+  fireTime          DateTime? @map("fire_time") @db.Timestamptz(6)
+  isOnHold          Boolean   @default(false) @map("is_on_hold")
+  // Customer Preferences
+  specialInstructions String? @map("special_instructions")
+  customerNotes     String?   @map("customer_notes")
+  // Combo Info
+  isComboParent     Boolean   @default(false) @map("is_combo_parent")
+  isComboChild      Boolean   @default(false) @map("is_combo_child")
+  comboParentId     String?   @map("combo_parent_id") @db.Uuid
+  comboGroup        String?   @map("combo_group") @db.VarChar(100)
+  // Refund/Void
+  isVoided          Boolean   @default(false) @map("is_voided")
+  voidReason        String?   @map("void_reason")
+  voidedAt          DateTime? @map("voided_at") @db.Timestamptz(6)
+  voidedByUserId    String?   @map("voided_by_user_id") @db.Uuid
+  refundAmount      Decimal?  @map("refund_amount") @db.Decimal(12, 4)
+  refundedAt        DateTime? @map("refunded_at") @db.Timestamptz(6)
+  // Seat Assignment
+  seatNumber        String?   @map("seat_number") @db.VarChar(20)
+  // Display
+  sortOrder         Int       @default(0) @map("sort_order")
+  // Metadata
+  metadata          Json?     @default("{}")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product           Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  voidedByUser      User?     @relation("OrderItemVoidedBy", fields: [voidedByUserId], references: [id])
+  comboParent       OrderItem? @relation("OrderItemCombo", fields: [comboParentId], references: [id])
+  comboChildren     OrderItem[] @relation("OrderItemCombo")
+  modifiers         OrderItemModifier[]
+
+  @@index([orderId], name: "idx_order_items_order")
+  @@index([productId], name: "idx_order_items_product")
+  @@index([tenantId, prepStatus], name: "idx_order_items_kitchen")
+  @@index([comboParentId], name: "idx_order_items_combo")
+  @@map("order_items")
+}
+
+model OrderItemModifier {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  orderItemId     String   @map("order_item_id") @db.Uuid
+  modifierId      String   @map("modifier_id") @db.Uuid
+  modifierGroupId String   @map("modifier_group_id") @db.Uuid
+  // Modifier Details
+  modifierName    String   @map("modifier_name") @db.VarChar(255)
+  modifierPrice   Decimal  @default(0.00) @map("modifier_price") @db.Decimal(12, 4)
+  quantity        Int      @default(1)
+  // Metadata
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifier        Modifier @relation(fields: [modifierId], references: [id], onDelete: Restrict)
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Restrict)
+
+  @@index([orderItemId], name: "idx_order_item_modifiers_item")
+  @@index([modifierId], name: "idx_order_item_modifiers_modifier")
+  @@map("order_item_modifiers")
+}
+
+// =====================================================================
+// SECTION 7: PAYMENTS
+// =====================================================================
+
+model Payment {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenantId           String    @map("tenant_id") @db.Uuid
+  orderId            String    @map("order_id") @db.Uuid
+  // Payment Details
+  paymentMethod      String    @map("payment_method") @db.VarChar(50)
+  paymentProvider    String?   @map("payment_provider") @db.VarChar(100)
+  amount             Decimal   @db.Decimal(12, 4)
+  // Card/Digital Payment Info
+  cardLast4          String?   @map("card_last_4") @db.VarChar(4)
+  cardBrand          String?   @map("card_brand") @db.VarChar(50)
+  cardType           String?   @map("card_type") @db.VarChar(20)
+  transactionId      String?   @map("transaction_id") @db.VarChar(255)
+  authorizationCode  String?   @map("authorization_code") @db.VarChar(100)
+  merchantId         String?   @map("merchant_id") @db.VarChar(100)
+  terminalId         String?   @map("terminal_id") @db.VarChar(100)
+  // Cash Handling
+  cashTendered       Decimal?  @map("cash_tendered") @db.Decimal(12, 4)
+  cashChange         Decimal?  @map("cash_change") @db.Decimal(12, 4)
+  // Status
+  paymentStatus      String    @default("pending") @map("payment_status") @db.VarChar(50)
+  failureReason      String?   @map("failure_reason")
+  // Timing
+  authorizedAt       DateTime? @map("authorized_at") @db.Timestamptz(6)
+  capturedAt         DateTime? @map("captured_at") @db.Timestamptz(6)
+  settledAt          DateTime? @map("settled_at") @db.Timestamptz(6)
+  refundedAt         DateTime? @map("refunded_at") @db.Timestamptz(6)
+  // Refunds
+  refundAmount       Decimal?  @map("refund_amount") @db.Decimal(12, 4)
+  refundTransactionId String?  @map("refund_transaction_id") @db.VarChar(255)
+  refundReason       String?   @map("refund_reason")
+  // Staff
+  processedByUserId  String?   @map("processed_by_user_id") @db.Uuid
+  // Metadata
+  metadata           Json?     @default("{}")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  processedByUser    User?     @relation(fields: [processedByUserId], references: [id])
+
+  @@index([orderId], name: "idx_payments_order")
+  @@index([tenantId, createdAt], name: "idx_payments_tenant_date")
+  @@index([tenantId, paymentStatus], name: "idx_payments_status")
+  @@index([tenantId, paymentMethod], name: "idx_payments_method")
+  @@index([transactionId], name: "idx_payments_transaction")
+  @@map("payments")
+}
+
+// =====================================================================
+// SECTION 8: PROMOTIONS, DISCOUNTS, VOUCHERS & LOYALTY
+// =====================================================================
+
+model Promotion {
+  id                   String    @id @default(uuid()) @db.Uuid
+  tenantId             String    @map("tenant_id") @db.Uuid
+  // Promotion Info
+  name                 String    @db.VarChar(255)
+  description          String?
+  code                 String?   @db.VarChar(100)
+  // Promotion Type
+  promotionType        String    @map("promotion_type") @db.VarChar(50)
+  discountType         String?   @map("discount_type") @db.VarChar(50)
+  // Discount Values
+  discountValue        Decimal?  @map("discount_value") @db.Decimal(12, 4)
+  maxDiscountAmount    Decimal?  @map("max_discount_amount") @db.Decimal(12, 4)
+  minOrderAmount       Decimal?  @map("min_order_amount") @db.Decimal(12, 4)
+  // Applicability
+  applicableProducts   String[]  @default([]) @map("applicable_products") @db.Uuid
+  applicableCategories String[]  @default([]) @map("applicable_categories") @db.Uuid
+  excludedProducts     String[]  @default([]) @map("excluded_products") @db.Uuid
+  // Buy X Get Y
+  buyQuantity          Int?      @map("buy_quantity")
+  getQuantity          Int?      @map("get_quantity")
+  getProductId         String?   @map("get_product_id") @db.Uuid
+  getDiscountPercent   Decimal?  @map("get_discount_percent") @db.Decimal(5, 2)
+  // Validity Period
+  validFrom            DateTime? @map("valid_from") @db.Timestamptz(6)
+  validTo              DateTime? @map("valid_to") @db.Timestamptz(6)
+  validDays            Int[]     @default([0, 1, 2, 3, 4, 5, 6]) @map("valid_days")
+  validHoursFrom       DateTime? @map("valid_hours_from") @db.Time(6)
+  validHoursTo         DateTime? @map("valid_hours_to") @db.Time(6)
+  // Usage Limits
+  maxUsesPerCustomer   Int?      @map("max_uses_per_customer")
+  maxTotalUses         Int?      @map("max_total_uses")
+  currentUses          Int       @default(0) @map("current_uses")
+  // Priority
+  priority             Int       @default(0)
+  stackable            Boolean   @default(false)
+  // Auto-apply
+  autoApply            Boolean   @default(false) @map("auto_apply")
+  requiresCode         Boolean   @default(false) @map("requires_code")
+  // Status
+  isActive             Boolean   @default(true) @map("is_active")
+  // Metadata
+  metadata             Json?     @default("{}")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  getProduct           Product?  @relation(fields: [getProductId], references: [id])
+  orderPromotions      OrderPromotion[]
+
+  @@index([tenantId], name: "idx_promotions_tenant")
+  @@index([tenantId, code], name: "idx_promotions_code")
+  @@index([tenantId, validFrom, validTo], name: "idx_promotions_valid")
+  @@map("promotions")
+}
+
+model Voucher {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  // Voucher Info
+  code            String    @unique @db.VarChar(100)
+  voucherType     String    @default("gift_card") @map("voucher_type") @db.VarChar(50)
+  // Value
+  initialValue    Decimal   @map("initial_value") @db.Decimal(12, 4)
+  currentBalance  Decimal   @map("current_balance") @db.Decimal(12, 4)
+  currencyCode    String?   @map("currency_code") @db.Char(3)
+  // Validity
+  issuedAt        DateTime  @default(now()) @map("issued_at") @db.Timestamptz(6)
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(6)
+  isActive        Boolean   @default(true) @map("is_active")
+  // Ownership
+  customerId      String?   @map("customer_id") @db.Uuid
+  issuedByUserId  String?   @map("issued_by_user_id") @db.Uuid
+  // Restrictions
+  minOrderAmount  Decimal?  @map("min_order_amount") @db.Decimal(12, 4)
+  applicableLocations String[] @default([]) @map("applicable_locations") @db.Uuid
+  // Metadata
+  metadata        Json?     @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  issuedByUser    User?     @relation("VoucherIssuedBy", fields: [issuedByUserId], references: [id])
+  transactions    VoucherTransaction[]
+  orderPromotions OrderPromotion[]
+
+  @@index([tenantId], name: "idx_vouchers_tenant")
+  @@index([code], name: "idx_vouchers_code")
+  @@index([customerId], name: "idx_vouchers_customer")
+  @@map("vouchers")
+}
+
+model VoucherTransaction {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  voucherId          String   @map("voucher_id") @db.Uuid
+  orderId            String?  @map("order_id") @db.Uuid
+  // Transaction Details
+  transactionType    String   @map("transaction_type") @db.VarChar(50)
+  amount             Decimal  @db.Decimal(12, 4)
+  balanceBefore      Decimal  @map("balance_before") @db.Decimal(12, 4)
+  balanceAfter       Decimal  @map("balance_after") @db.Decimal(12, 4)
+  // Staff
+  processedByUserId  String?  @map("processed_by_user_id") @db.Uuid
+  notes              String?
+  // Metadata
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  voucher            Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  order              Order?   @relation(fields: [orderId], references: [id])
+  processedByUser    User?    @relation(fields: [processedByUserId], references: [id])
+
+  @@index([voucherId], name: "idx_voucher_transactions_voucher")
+  @@index([orderId], name: "idx_voucher_transactions_order")
+  @@map("voucher_transactions")
+}
+
+model OrderPromotion {
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  orderId             String    @map("order_id") @db.Uuid
+  promotionId         String?   @map("promotion_id") @db.Uuid
+  voucherId           String?   @map("voucher_id") @db.Uuid
+  // Discount Details
+  discountType        String?   @map("discount_type") @db.VarChar(50)
+  discountAmount      Decimal   @map("discount_amount") @db.Decimal(12, 4)
+  discountReason      String?   @map("discount_reason")
+  codeUsed            String?   @map("code_used") @db.VarChar(100)
+  // Authorization
+  authorizedByUserId  String?   @map("authorized_by_user_id") @db.Uuid
+  authorizationReason String?   @map("authorization_reason")
+  // Metadata
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  promotion           Promotion? @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  voucher             Voucher?  @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  authorizedByUser    User?     @relation(fields: [authorizedByUserId], references: [id])
+
+  @@index([orderId], name: "idx_order_promotions_order")
+  @@index([promotionId], name: "idx_order_promotions_promotion")
+  @@index([voucherId], name: "idx_order_promotions_voucher")
+  @@map("order_promotions")
+}
+
+model LoyaltyRule {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tenantId              String    @map("tenant_id") @db.Uuid
+  // Rule Info
+  name                  String    @db.VarChar(255)
+  ruleType              String    @default("points_per_dollar") @map("rule_type") @db.VarChar(50)
+  // Points Earning
+  pointsPerDollar       Decimal?  @map("points_per_dollar") @db.Decimal(5, 2)
+  pointsPerVisit        Int?      @map("points_per_visit")
+  minPurchaseAmount     Decimal?  @map("min_purchase_amount") @db.Decimal(10, 2)
+  // Points Redemption
+  redemptionRate        Decimal?  @map("redemption_rate") @db.Decimal(10, 4)
+  minPointsForRedemption Int      @default(100) @map("min_points_for_redemption")
+  // Validity
+  isActive              Boolean   @default(true) @map("is_active")
+  validFrom             DateTime? @map("valid_from") @db.Timestamptz(6)
+  validTo               DateTime? @map("valid_to") @db.Timestamptz(6)
+  // Metadata
+  metadata              Json?     @default("{}")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant                Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId], name: "idx_loyalty_rules_tenant")
+  @@map("loyalty_rules")
+}
+
+model Customer {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  // Customer Info
+  firstName        String?   @map("first_name") @db.VarChar(100)
+  lastName         String?   @map("last_name") @db.VarChar(100)
+  email            String?   @db.VarChar(255)
+  phone            String    @db.VarChar(50)
+  dateOfBirth      DateTime? @map("date_of_birth") @db.Date
+  // Address
+  addressLine1     String?   @map("address_line1") @db.VarChar(255)
+  addressLine2     String?   @map("address_line2") @db.VarChar(255)
+  city             String?   @db.VarChar(100)
+  state            String?   @db.VarChar(100)
+  postalCode       String?   @map("postal_code") @db.VarChar(20)
+  countryCode      String?   @map("country_code") @db.Char(2)
+  // Loyalty
+  loyaltyMember    Boolean   @default(false) @map("loyalty_member")
+  loyaltyTier      String    @default("bronze") @map("loyalty_tier") @db.VarChar(50)
+  loyaltyPoints    Int       @default(0) @map("loyalty_points")
+  loyaltyJoinedAt  DateTime? @map("loyalty_joined_at") @db.Timestamptz(6)
+  // Wallet
+  walletBalance    Decimal   @default(0.00) @map("wallet_balance") @db.Decimal(12, 4)
+  // Preferences
+  marketingOptIn   Boolean   @default(false) @map("marketing_opt_in")
+  smsOptIn         Boolean   @default(false) @map("sms_opt_in")
+  emailOptIn       Boolean   @default(false) @map("email_opt_in")
+  // Stats
+  totalOrders      Int       @default(0) @map("total_orders")
+  totalSpent       Decimal   @default(0.00) @map("total_spent") @db.Decimal(12, 4)
+  lastOrderAt      DateTime? @map("last_order_at") @db.Timestamptz(6)
+  // Status
+  isActive         Boolean   @default(true) @map("is_active")
+  isBlocked        Boolean   @default(false) @map("is_blocked")
+  blockedReason    String?   @map("blocked_reason")
+  // Metadata
+  metadata         Json?     @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders           Order[]
+  vouchers         Voucher[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@unique([tenantId, phone], name: "customers_tenant_phone_unique")
+  @@index([tenantId], name: "idx_customers_tenant")
+  @@index([tenantId, phone], name: "idx_customers_phone")
+  @@index([tenantId, email], name: "idx_customers_email")
+  @@index([tenantId, loyaltyMember], name: "idx_customers_loyalty")
+  @@map("customers")
+}
+
+model LoyaltyTransaction {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  customerId          String   @map("customer_id") @db.Uuid
+  orderId             String?  @map("order_id") @db.Uuid
+  // Transaction Details
+  transactionType     String   @map("transaction_type") @db.VarChar(50)
+  pointsChange        Int      @map("points_change")
+  pointsBalanceBefore Int      @map("points_balance_before")
+  pointsBalanceAfter  Int      @map("points_balance_after")
+  // Details
+  dollarAmount        Decimal? @map("dollar_amount") @db.Decimal(12, 4)
+  description         String?
+  expiresAt           DateTime? @map("expires_at") @db.Timestamptz(6)
+  // Metadata
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer            Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order               Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([customerId], name: "idx_loyalty_transactions_customer")
+  @@index([orderId], name: "idx_loyalty_transactions_order")
+  @@map("loyalty_transactions")
+}
+
+// =====================================================================
+// SECTION 9: INVENTORY MANAGEMENT
+// =====================================================================
+
+model InventoryItem {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  locationId        String?   @map("location_id") @db.Uuid
+  // Item Info
+  name              String    @db.VarChar(255)
+  sku               String?   @db.VarChar(100)
+  barcode           String?   @db.VarChar(100)
+  description       String?
+  // Category
+  category          String?   @db.VarChar(100)
+  subcategory       String?   @db.VarChar(100)
+  // Units
+  unitOfMeasure     String    @default("piece") @map("unit_of_measure") @db.VarChar(50)
+  conversionFactor  Decimal   @default(1.0000) @map("conversion_factor") @db.Decimal(10, 4)
+  // Stock Levels
+  currentStock      Decimal   @default(0.0000) @map("current_stock") @db.Decimal(12, 4)
+  minimumStock      Decimal   @default(0.0000) @map("minimum_stock") @db.Decimal(12, 4)
+  maximumStock      Decimal?  @map("maximum_stock") @db.Decimal(12, 4)
+  reorderPoint      Decimal?  @map("reorder_point") @db.Decimal(12, 4)
+  reorderQuantity   Decimal?  @map("reorder_quantity") @db.Decimal(12, 4)
+  // Costing
+  unitCost          Decimal?  @map("unit_cost") @db.Decimal(12, 4)
+  avgCost           Decimal?  @map("avg_cost") @db.Decimal(12, 4)
+  lastPurchaseCost  Decimal?  @map("last_purchase_cost") @db.Decimal(12, 4)
+  // Supplier
+  primarySupplierId String?   @map("primary_supplier_id") @db.Uuid
+  supplierSku       String?   @map("supplier_sku") @db.VarChar(100)
+  // Status
+  isActive          Boolean   @default(true) @map("is_active")
+  trackStock        Boolean   @default(true) @map("track_stock")
+  allowNegativeStock Boolean  @default(false) @map("allow_negative_stock")
+  // Alerts
+  lowStockAlert     Boolean   @default(false) @map("low_stock_alert")
+  outOfStock        Boolean   @default(false) @map("out_of_stock")
+  // Metadata
+  metadata          Json?     @default("{}")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location          Location? @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  recipes           Recipe[]
+  adjustments       InventoryAdjustment[]
+
+  @@unique([tenantId, name, locationId], name: "inventory_items_tenant_name_location_unique")
+  @@index([tenantId], name: "idx_inventory_items_tenant")
+  @@index([locationId], name: "idx_inventory_items_location")
+  @@index([tenantId, sku], name: "idx_inventory_items_sku")
+  @@index([tenantId, lowStockAlert], name: "idx_inventory_items_low_stock")
+  @@map("inventory_items")
+}
+
+model Recipe {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  productId       String   @map("product_id") @db.Uuid
+  inventoryItemId String   @map("inventory_item_id") @db.Uuid
+  // Recipe Details
+  quantityUsed    Decimal  @map("quantity_used") @db.Decimal(12, 4)
+  unitOfMeasure   String?  @map("unit_of_measure") @db.VarChar(50)
+  // Costing
+  costPerUnit     Decimal? @map("cost_per_unit") @db.Decimal(12, 4)
+  // Metadata
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, inventoryItemId], name: "recipes_product_ingredient_unique")
+  @@index([productId], name: "idx_recipes_product")
+  @@index([inventoryItemId], name: "idx_recipes_ingredient")
+  @@map("recipes")
+}
+
+model InventoryAdjustment {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  inventoryItemId   String    @map("inventory_item_id") @db.Uuid
+  locationId        String?   @map("location_id") @db.Uuid
+  // Adjustment Details
+  adjustmentType    String    @map("adjustment_type") @db.VarChar(50)
+  quantityChange    Decimal   @map("quantity_change") @db.Decimal(12, 4)
+  quantityBefore    Decimal   @map("quantity_before") @db.Decimal(12, 4)
+  quantityAfter     Decimal   @map("quantity_after") @db.Decimal(12, 4)
+  // Costing
+  unitCost          Decimal?  @map("unit_cost") @db.Decimal(12, 4)
+  totalCost         Decimal?  @map("total_cost") @db.Decimal(12, 4)
+  // Reason
+  reason            String?
+  referenceNumber   String?   @map("reference_number") @db.VarChar(100)
+  // Staff
+  adjustedByUserId  String?   @map("adjusted_by_user_id") @db.Uuid
+  approvedByUserId  String?   @map("approved_by_user_id") @db.Uuid
+  // Metadata
+  metadata          Json?     @default("{}")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItem     InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  location          Location? @relation(fields: [locationId], references: [id])
+  adjustedByUser    User?     @relation("AdjustedBy", fields: [adjustedByUserId], references: [id])
+  approvedByUser    User?     @relation("ApprovedBy", fields: [approvedByUserId], references: [id])
+
+  @@index([inventoryItemId], name: "idx_inventory_adjustments_item")
+  @@index([tenantId, createdAt], name: "idx_inventory_adjustments_tenant_date")
+  @@index([tenantId, adjustmentType], name: "idx_inventory_adjustments_type")
+  @@map("inventory_adjustments")
+}
+
+// =====================================================================
+// SECTION 10: DEVICES & TERMINALS
+// =====================================================================
+
+model Terminal {
+  id                   String    @id @default(uuid()) @db.Uuid
+  tenantId             String    @map("tenant_id") @db.Uuid
+  locationId           String    @map("location_id") @db.Uuid
+  // Terminal Info
+  terminalName         String    @map("terminal_name") @db.VarChar(255)
+  terminalNumber       Int?      @map("terminal_number")
+  deviceId             String?   @unique @map("device_id") @db.VarChar(255)
+  // Network
+  ipAddressExternal    String?   @map("ip_address_external") @db.Inet
+  ipAddressInternal    String?   @map("ip_address_internal") @db.Inet
+  macAddress           String?   @map("mac_address") @db.VarChar(17)
+  // Hardware
+  deviceModel          String?   @map("device_model") @db.VarChar(100)
+  osVersion            String?   @map("os_version") @db.VarChar(100)
+  appVersion           String?   @map("app_version") @db.VarChar(50)
+  // Settings
+  isMainTerminal       Boolean   @default(false) @map("is_main_terminal")
+  isOnlineOrderEnabled Boolean   @default(false) @map("is_online_order_enabled")
+  printerMappings      Json?     @default("{}") @map("printer_mappings")
+  // Status
+  isActive             Boolean   @default(true) @map("is_active")
+  isLicensed           Boolean   @default(false) @map("is_licensed")
+  licenseExpiresAt     DateTime? @map("license_expires_at") @db.Timestamptz(6)
+  lastHeartbeatAt      DateTime? @map("last_heartbeat_at") @db.Timestamptz(6)
+  connectionStatus     String    @default("offline") @map("connection_status") @db.VarChar(50)
+  // Synchronization
+  lastSyncAt           DateTime? @map("last_sync_at") @db.Timestamptz(6)
+  pendingSyncItems     Int       @default(0) @map("pending_sync_items")
+  // Merchant Integration
+  merchantId           String?   @map("merchant_id") @db.VarChar(255)
+  tyroPairingStatus    String?   @map("tyro_pairing_status") @db.VarChar(50)
+  // Metadata
+  metadata             Json?     @default("{}")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant               Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location             Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  auditLogs            AuditLog[]
+
+  @@index([tenantId], name: "idx_terminals_tenant")
+  @@index([locationId], name: "idx_terminals_location")
+  @@index([deviceId], name: "idx_terminals_device")
+  @@index([tenantId, connectionStatus], name: "idx_terminals_status")
+  @@map("terminals")
+}
+
+// =====================================================================
+// SECTION 11: REPORTING & ANALYTICS
+// =====================================================================
+
+model DailySalesSummary {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tenantId              String    @map("tenant_id") @db.Uuid
+  locationId            String    @map("location_id") @db.Uuid
+  date                  DateTime  @db.Date
+  // Sales Metrics
+  totalOrders           Int       @default(0) @map("total_orders")
+  totalRevenue          Decimal   @default(0.00) @map("total_revenue") @db.Decimal(12, 4)
+  totalTax              Decimal   @default(0.00) @map("total_tax") @db.Decimal(12, 4)
+  totalDiscount         Decimal   @default(0.00) @map("total_discount") @db.Decimal(12, 4)
+  totalTips             Decimal   @default(0.00) @map("total_tips") @db.Decimal(12, 4)
+  netSales              Decimal   @default(0.00) @map("net_sales") @db.Decimal(12, 4)
+  // Order Type Breakdown
+  dineInOrders          Int       @default(0) @map("dine_in_orders")
+  dineInRevenue         Decimal   @default(0.00) @map("dine_in_revenue") @db.Decimal(12, 4)
+  takeawayOrders        Int       @default(0) @map("takeaway_orders")
+  takeawayRevenue       Decimal   @default(0.00) @map("takeaway_revenue") @db.Decimal(12, 4)
+  deliveryOrders        Int       @default(0) @map("delivery_orders")
+  deliveryRevenue       Decimal   @default(0.00) @map("delivery_revenue") @db.Decimal(12, 4)
+  // Payment Method Breakdown
+  cashPayments          Decimal   @default(0.00) @map("cash_payments") @db.Decimal(12, 4)
+  cardPayments          Decimal   @default(0.00) @map("card_payments") @db.Decimal(12, 4)
+  digitalPayments       Decimal   @default(0.00) @map("digital_payments") @db.Decimal(12, 4)
+  // Customer Metrics
+  uniqueCustomers       Int       @default(0) @map("unique_customers")
+  newCustomers          Int       @default(0) @map("new_customers")
+  returningCustomers    Int       @default(0) @map("returning_customers")
+  avgOrderValue         Decimal   @default(0.00) @map("avg_order_value") @db.Decimal(12, 4)
+  // Product Metrics
+  topSellingProductId   String?   @map("top_selling_product_id") @db.Uuid
+  topSellingCategoryId  String?   @map("top_selling_category_id") @db.Uuid
+  // Metadata
+  lastCalculatedAt      DateTime? @map("last_calculated_at") @db.Timestamptz(6)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant                Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location              Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, locationId, date], name: "daily_sales_summary_unique")
+  @@index([tenantId, date], name: "idx_daily_sales_summary_tenant_date")
+  @@index([locationId, date], name: "idx_daily_sales_summary_location_date")
+  @@map("daily_sales_summary")
+}
+
+// =====================================================================
+// SECTION 12: AUDIT & SECURITY
+// =====================================================================
+
+model AuditLog {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String?   @map("tenant_id") @db.Uuid
+  // Action Details
+  tableName     String    @map("table_name") @db.VarChar(100)
+  recordId      String?   @map("record_id") @db.Uuid
+  action        String    @db.VarChar(50)
+  // Changes
+  oldValues     Json?     @map("old_values")
+  newValues     Json?     @map("new_values")
+  changedFields String[]  @map("changed_fields")
+  // User Context
+  userId        String?   @map("user_id") @db.Uuid
+  userEmail     String?   @map("user_email") @db.VarChar(255)
+  userRole      String?   @map("user_role") @db.VarChar(50)
+  // Request Context
+  ipAddress     String?   @map("ip_address") @db.Inet
+  userAgent     String?   @map("user_agent")
+  terminalId    String?   @map("terminal_id") @db.Uuid
+  // Metadata
+  metadata      Json?     @default("{}")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User?     @relation(fields: [userId], references: [id])
+  terminal      Terminal? @relation(fields: [terminalId], references: [id])
+
+  @@index([tenantId, createdAt], name: "idx_audit_logs_tenant_date")
+  @@index([tableName, recordId], name: "idx_audit_logs_table")
+  @@index([userId], name: "idx_audit_logs_user")
+  @@map("audit_logs")
+}

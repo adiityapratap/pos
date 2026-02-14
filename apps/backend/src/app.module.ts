@@ -18,6 +18,8 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      // In production, env vars come from Railway/container, not .env file
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     PrismaModule,
     AuthModule,

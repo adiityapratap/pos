@@ -15,12 +15,20 @@ import { PrismaModule } from '../prisma.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET', 'your-secret-key-change-in-production'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '8h') as any,
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        // Read directly from process.env as fallback (Railway passes env vars directly)
+        const secret = configService.get<string>('JWT_SECRET') || process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+        const expiresIn = configService.get<string>('JWT_EXPIRES_IN') || process.env.JWT_EXPIRES_IN || '8h';
+        
+        console.log('JWT Config:', { secretSet: !!secret, expiresIn });
+        
+        return {
+          secret,
+          signOptions: {
+            expiresIn,
+          },
+        };
+      },
     }),
     ConfigModule,
   ],

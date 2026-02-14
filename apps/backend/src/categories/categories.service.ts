@@ -93,7 +93,9 @@ export class CategoriesService {
     const categories = await this.prisma.category.findMany({
       where,
       include: {
-        parentRelationships: {
+        // Use subcategoryRelationships to get relationships where THIS category is the subcategory
+        // This tells us what parents THIS category has
+        subcategoryRelationships: {
           include: {
             parentCategory: true,
           },
@@ -105,10 +107,10 @@ export class CategoriesService {
       ],
     });
 
-    // Add parentIds array to each category
+    // Add parentIds array to each category (from relationships where this category is the child)
     return categories.map(cat => ({
       ...cat,
-      parentIds: cat.parentRelationships.map(rel => rel.parentCategoryId),
+      parentIds: cat.subcategoryRelationships.map(rel => rel.parentCategoryId),
     }));
   }
 

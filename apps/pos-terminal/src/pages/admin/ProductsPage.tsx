@@ -143,30 +143,13 @@ export default function ProductsPage() {
   const findCategoryById = (id: string): Category | null => {
     for (const cat of categories) {
       if (cat.id === id) return cat;
-      if (cat.subcategories) {
-        for (const sub of cat.subcategories) {
+      if (cat.children) {
+        for (const sub of cat.children) {
           if (sub.id === id) return sub;
         }
       }
     }
     return null;
-  };
-
-  const getAllCategories = (): { value: string; label: string; isSubcategory: boolean }[] => {
-    const result: { value: string; label: string; isSubcategory: boolean }[] = [];
-    categories.forEach(cat => {
-      result.push({ value: cat.id, label: cat.displayName || cat.name, isSubcategory: false });
-      if (cat.children) {
-        cat.children.forEach(sub => {
-          result.push({
-            value: sub.id,
-            label: `${cat.displayName || cat.name} → ${sub.displayName || sub.name}`,
-            isSubcategory: true
-          });
-        });
-      }
-    });
-    return result;
   };
 
   const handleOpenModal = async (product?: Product) => {

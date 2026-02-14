@@ -99,8 +99,8 @@ const POSTerminal: React.FC = () => {
   const [orderType, setOrderType] = useState<OrderType>('dine-in');
   const [selectedTable, setSelectedTable] = useState('4');
   const [discountInput, setDiscountInput] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [customerName, setCustomerName] = useState('');
+  const [_phoneNumber, _setPhoneNumber] = useState('');
+  const [_customerName, _setCustomerName] = useState('');
   
   const [orderNumber] = useState(`#${Math.floor(Math.random() * 90000) + 10000}`);
   const [customerDisplay] = useState(`Customer${Math.floor(Math.random() * 9000) + 1000}`);
@@ -243,10 +243,6 @@ const POSTerminal: React.FC = () => {
       if (isSelected) setSelectedModifiers(selectedModifiers.filter((m) => m.id !== modifier.id));
       else setSelectedModifiers([...selectedModifiers, modifier]);
     }
-  };
-
-  const handleOptionSelect = (optionGroup: string, value: string) => {
-    setSelectedOptions(prev => ({ ...prev, [optionGroup]: value }));
   };
 
   const addToCart = () => {

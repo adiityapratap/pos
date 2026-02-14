@@ -173,8 +173,7 @@ export class AuthService {
     };
 
     // Explicitly set expiresIn to avoid env var issues in production
-    const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
-    const accessToken = this.jwtService.sign(payload, { expiresIn });
+    const accessToken = this.jwtService.sign(payload as any, { expiresIn: '24h' });
 
     return {
       accessToken,

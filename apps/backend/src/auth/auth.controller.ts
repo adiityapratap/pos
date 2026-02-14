@@ -5,12 +5,17 @@ import {
   HttpCode,
   HttpStatus,
   Headers,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PinLoginDto, EmailLoginDto, OwnerLoginDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+  
   constructor(private readonly authService: AuthService) {}
 
   /**
@@ -23,15 +28,24 @@ export class AuthController {
     @Body() dto: PinLoginDto,
     @Headers('x-tenant-subdomain') tenantSubdomain: string,
   ) {
+    this.logger.log(`PIN login attempt for employee: ${dto.employeeId}, tenant: ${tenantSubdomain}`);
+    
     if (!tenantSubdomain) {
-      throw new Error('Tenant subdomain is required');
+      throw new BadRequestException('Tenant subdomain is required (x-tenant-subdomain header)');
     }
 
-    return this.authService.validatePin(
-      dto.employeeId,
-      dto.pin,
-      tenantSubdomain,
-    );
+    try {
+      const result = await this.authService.validatePin(
+        dto.employeeId,
+        dto.pin,
+        tenantSubdomain,
+      );
+      this.logger.log(`PIN login successful for employee: ${dto.employeeId}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`PIN login failed: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   /**
@@ -44,15 +58,24 @@ export class AuthController {
     @Body() dto: EmailLoginDto,
     @Headers('x-tenant-subdomain') tenantSubdomain: string,
   ) {
+    this.logger.log(`Email login attempt for: ${dto.email}, tenant: ${tenantSubdomain}`);
+    
     if (!tenantSubdomain) {
-      throw new Error('Tenant subdomain is required');
+      throw new BadRequestException('Tenant subdomain is required (x-tenant-subdomain header)');
     }
 
-    return this.authService.validateEmailPassword(
-      dto.email,
-      dto.password,
-      tenantSubdomain,
-    );
+    try {
+      const result = await this.authService.validateEmailPassword(
+        dto.email,
+        dto.password,
+        tenantSubdomain,
+      );
+      this.logger.log(`Email login successful for: ${dto.email}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Email login failed: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   /**

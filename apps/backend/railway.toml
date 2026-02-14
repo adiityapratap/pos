@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "rm -f package-lock.json && npm install && npx prisma generate && npm run build"
+buildCommand = "pnpm install && npx prisma generate && pnpm run build"
 
 [deploy]
-startCommand = "npx prisma migrate deploy && npm run start:prod"
+startCommand = "npx prisma migrate deploy && pnpm run start:prod"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"

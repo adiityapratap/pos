@@ -1,8 +1,9 @@
 [build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+builder = "nixpacks"
+buildCommand = "cd apps/backend && npx prisma generate --schema=./prisma/schema.prisma && pnpm run build"
 
 [deploy]
+startCommand = "cd apps/backend && node dist/main.js"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"

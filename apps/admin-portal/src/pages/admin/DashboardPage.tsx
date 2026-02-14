@@ -125,17 +125,6 @@ export default function DashboardPage() {
     }
   };
 
-  const _getColorClasses = (color: string) => {
-    const colors: Record<string, string> = {
-      blue: 'bg-blue-100 text-blue-600',
-      green: 'bg-green-100 text-green-600',
-      purple: 'bg-purple-100 text-purple-600',
-      orange: 'bg-orange-100 text-orange-600',
-      red: 'bg-red-100 text-red-600'
-    };
-    return colors[color] || 'bg-gray-100 text-gray-600';
-  };
-
   const getIconBgClass = (color: string) => {
     const colors: Record<string, string> = {
       blue: 'bg-blue-100',

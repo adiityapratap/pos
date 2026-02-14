@@ -152,23 +152,6 @@ export default function ProductsPage() {
     return null;
   };
 
-  const _getAllCategories = (): { value: string; label: string; isSubcategory: boolean }[] => {
-    const result: { value: string; label: string; isSubcategory: boolean }[] = [];
-    categories.forEach(cat => {
-      result.push({ value: cat.id, label: cat.displayName || cat.name, isSubcategory: false });
-      if (cat.children) {
-        cat.children.forEach(sub => {
-          result.push({
-            value: sub.id,
-            label: `${cat.displayName || cat.name} → ${sub.displayName || sub.name}`,
-            isSubcategory: true
-          });
-        });
-      }
-    });
-    return result;
-  };
-
   const handleOpenModal = async (product?: Product) => {
     if (product) {
       setEditingProduct(product);

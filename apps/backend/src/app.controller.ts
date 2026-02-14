@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 
+// Build timestamp: 2026-02-14T18:55:00Z - force rebuild
 @Controller()
 export class AppController {
   constructor(

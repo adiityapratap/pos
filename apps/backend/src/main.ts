@@ -5,26 +5,35 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS for frontend (allow all localhost ports for development)
+  // Enable CORS for frontend
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      // Allow any localhost origin
+      // Allow any localhost origin (development)
       if (origin.match(/^http:\/\/localhost:\d+$/)) {
         return callback(null, true);
       }
       
-      // Allow specific origins in production
-      const allowedOrigins = [
-        'http://localhost:5173',
-        'http://localhost:5174', 
-        'http://localhost:5175',
-        'http://localhost:3000',
-      ];
+      // Allow Vercel preview and production domains
+      if (origin.match(/\.vercel\.app$/)) {
+        return callback(null, true);
+      }
       
+      // Allow Railway domains
+      if (origin.match(/\.up\.railway\.app$/)) {
+        return callback(null, true);
+      }
+
+      // Allow custom domains from environment variable
+      const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [];
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // In production, be more permissive for demo purposes
+      if (process.env.NODE_ENV === 'production') {
         return callback(null, true);
       }
       

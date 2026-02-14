@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 
-// Build timestamp: 2026-02-14T18:55:00Z - force rebuild
+// Build timestamp: 2026-02-14T19:10:00Z - v2
 @Controller()
 export class AppController {
   constructor(
@@ -16,10 +16,11 @@ export class AppController {
   }
 
   @Get('health')
-  health(): { status: string; timestamp: string } {
+  health(): { status: string; timestamp: string; version: string } {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
+      version: 'v2-with-db-health'
     };
   }
 
@@ -39,5 +40,14 @@ export class AppController {
         error: error.message,
       };
     }
+  }
+
+  @Get('debug')
+  debug(): { dbUrlSet: boolean; nodeEnv: string; port: string } {
+    return {
+      dbUrlSet: !!process.env.DATABASE_URL,
+      nodeEnv: process.env.NODE_ENV || 'not-set',
+      port: process.env.PORT || '3000',
+    };
   }
 }

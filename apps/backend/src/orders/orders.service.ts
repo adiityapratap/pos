@@ -83,16 +83,34 @@ export class OrdersService {
         // Create modifiers if any
         const originalItem = dto.items.find(i => i.productId === itemData.productId);
         if (originalItem?.modifiers && originalItem.modifiers.length > 0) {
+          // For each modifier, look up its modifierGroupId if not provided
+          const modifierData = await Promise.all(
+            originalItem.modifiers.map(async (mod) => {
+              let modifierGroupId = mod.modifierGroupId;
+              
+              // Look up modifierGroupId (groupId in Modifier table) if not provided
+              if (!modifierGroupId) {
+                const modifier = await tx.modifier.findUnique({
+                  where: { id: mod.modifierId },
+                  select: { groupId: true },
+                });
+                modifierGroupId = modifier?.groupId || mod.modifierId; // fallback to modifierId if not found
+              }
+
+              return {
+                tenantId,
+                orderItemId: orderItem.id,
+                modifierId: mod.modifierId,
+                modifierGroupId,
+                modifierName: mod.modifierName,
+                modifierPrice: mod.price,
+                quantity: mod.quantity ?? 1,
+              };
+            })
+          );
+
           await tx.orderItemModifier.createMany({
-            data: originalItem.modifiers.map((mod, idx) => ({
-              tenantId,
-              orderItemId: orderItem.id,
-              modifierId: mod.modifierId,
-              modifierName: mod.modifierName,
-              priceAdjustment: mod.price,
-              quantity: mod.quantity ?? 1,
-              sortOrder: idx,
-            })),
+            data: modifierData,
           });
         }
       }

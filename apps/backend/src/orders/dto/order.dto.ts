@@ -29,6 +29,10 @@ export class OrderItemModifierDto {
   modifierId: string;
 
   @IsString()
+  @IsOptional()
+  modifierGroupId?: string;
+
+  @IsString()
   modifierName: string;
 
   @IsNumber()

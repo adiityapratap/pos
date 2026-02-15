@@ -383,7 +383,6 @@ const POSTerminal: React.FC = () => {
               <div className="brand-icon"><img src={logoImg} alt="Logo" /></div>
               <div className="brand-text">
                 <span className="brand-name">BIZPOS</span>
-                <span className="brand-sub">Tico Taco Restaurant</span>
               </div>
             </div>
             <div className="header-time">

@@ -43,7 +43,7 @@ export class OrdersService {
     const discountAmount = dto.discountAmount ?? 0;
     const totalAmount = subtotal + taxAmount - discountAmount;
 
-    return this.prisma.$transaction(async (tx) => {
+    const orderId = await this.prisma.$transaction(async (tx) => {
       // Create order
       const order = await tx.order.create({
         data: {
@@ -115,8 +115,11 @@ export class OrdersService {
         }
       }
 
-      return this.findOne(tenantId, order.id);
+      return order.id;
     });
+
+    // Fetch the complete order after transaction commits
+    return this.findOne(tenantId, orderId);
   }
 
   async findAll(tenantId: string, query: OrderQueryDto) {

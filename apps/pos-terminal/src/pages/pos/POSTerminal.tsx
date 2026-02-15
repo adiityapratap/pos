@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import './POSTerminal.css';
@@ -77,6 +78,7 @@ type ViewMode = 'products' | 'product-detail' | 'combos';
 
 const POSTerminal: React.FC = () => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -367,8 +369,8 @@ const POSTerminal: React.FC = () => {
           <a href="#" className="nav-item"><i className="fa-solid fa-home"></i><span>Home</span></a>
           <a href="#" className="nav-item active"><i className="fa-solid fa-utensils"></i><span>Menu</span></a>
           <a href="#" className="nav-item"><i className="fa-solid fa-credit-card"></i><span>Payments</span></a>
-          <a href="#" className="nav-item"><i className="fa-solid fa-receipt"></i><span>Receipts</span></a>
-          <a href="#" className="nav-item"><i className="fa-solid fa-truck"></i><span>Delivery</span></a>
+          <a onClick={() => navigate('/orders')} className="nav-item" style={{ cursor: 'pointer' }}><i className="fa-solid fa-receipt"></i><span>Orders</span></a>
+          <a href="#" className="nav-item"><i className="fa-solid fa-chart-pie"></i><span>Reports</span></a>
           <a href="#" className="nav-item"><i className="fa-solid fa-cog"></i><span>Back Office</span></a>
         </nav>
         <button onClick={logout} className="logout-btn"><i className="fa-solid fa-arrow-left"></i></button>

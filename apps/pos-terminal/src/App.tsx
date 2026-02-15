@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import POSTerminal from './pages/pos/POSTerminal';
+import OrdersPage from './pages/pos/OrdersPage';
 import './App.css';
 
 function App() {
@@ -18,6 +19,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <POSTerminal />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Orders Page Route */}
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <OrdersPage />
               </ProtectedRoute>
             }
           />

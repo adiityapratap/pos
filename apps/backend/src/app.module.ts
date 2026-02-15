@@ -11,6 +11,7 @@ import { CombosModule } from './combos/combos.module';
 import { MenuModule } from './menu/menu.module';
 import { OwnerModule } from './owner/owner.module';
 import { LocationsModule } from './locations/locations.module';
+import { OrdersModule } from './orders/orders.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
@@ -30,6 +31,7 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     MenuModule,
     OwnerModule,
     LocationsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

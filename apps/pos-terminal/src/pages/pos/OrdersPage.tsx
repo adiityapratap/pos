@@ -463,10 +463,10 @@ const OrdersPage: React.FC = () => {
                             Print
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, 'voided'); }}
+                            onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, 'cancelled'); }}
                             className="py-2 rounded bg-[#151E32] text-slate-300 text-xs font-medium hover:bg-[#334155] border border-[#334155]"
                           >
-                            Void
+                            Cancel
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleRefund(order.id); }}

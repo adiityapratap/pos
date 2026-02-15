@@ -77,9 +77,11 @@ type OrderType = 'dine-in' | 'home-delivery' | 'take-away';
 type ViewMode = 'products' | 'product-detail' | 'combos';
 
 const POSTerminal: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   
+  const [defaultLocationId, setDefaultLocationId] = useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -129,9 +131,93 @@ const POSTerminal: React.FC = () => {
     loadProducts();
     loadSubcategories();
     loadCombos();
+    loadDefaultLocation();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const loadDefaultLocation = async () => {
+    try {
+      // First try from user's allowed locations
+      const userAllowedLocations = (user as any)?.allowedLocations;
+      if (userAllowedLocations && userAllowedLocations.length > 0) {
+        setDefaultLocationId(userAllowedLocations[0]);
+        return;
+      }
+      // Fallback: fetch from locations API
+      const response = await apiClient.get('/locations');
+      if (response.data && response.data.length > 0) {
+        setDefaultLocationId(response.data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading location:', error);
+    }
+  };
+
+  const createOrder = async (paymentMethod: 'cash' | 'card' | 'other' = 'cash') => {
+    if (cart.length === 0) {
+      alert('Cart is empty');
+      return false;
+    }
+    if (!defaultLocationId) {
+      alert('No location configured');
+      return false;
+    }
+
+    try {
+      setIsProcessingPayment(true);
+      const orderTypeMap: Record<OrderType, string> = {
+        'dine-in': 'dine_in',
+        'home-delivery': 'delivery',
+        'take-away': 'takeaway',
+      };
+
+      const orderPayload = {
+        locationId: defaultLocationId,
+        orderType: orderTypeMap[orderType],
+        tableNumber: orderType === 'dine-in' ? selectedTable : undefined,
+        items: cart.map(item => ({
+          productId: item.product.id,
+          itemName: item.product.displayName || item.product.name,
+          unitPrice: Number(item.product.basePrice),
+          quantity: item.quantity,
+          lineTotal: calculateItemPrice(item),
+          specialInstructions: item.notes,
+          modifiers: item.selectedModifiers.map(mod => ({
+            modifierId: mod.id,
+            modifierName: mod.displayName || mod.name,
+            price: Number(mod.priceChange) || 0,
+            quantity: 1,
+          })),
+        })),
+        discountAmount: getDiscount(),
+        taxRate: 0.1, // 10% tax
+      };
+
+      const response = await apiClient.post('/orders', orderPayload);
+      const order = response.data;
+
+      // Mark as paid
+      await apiClient.put(`/orders/${order.id}/payment`, {
+        paymentStatus: 'paid',
+        paymentMethod,
+        amountPaid: getTotal(),
+      });
+
+      // Mark as completed
+      await apiClient.put(`/orders/${order.id}/status`, {
+        orderStatus: 'completed',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Failed to create order. Please try again.');
+      return false;
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -680,15 +766,22 @@ const POSTerminal: React.FC = () => {
               <button className="modal-cancel-btn" onClick={() => setShowCashModal(false)}>Cancel</button>
               <button 
                 className="modal-confirm-btn" 
-                onClick={() => {
-                  // TODO: Process payment
-                  alert('Payment confirmed!');
-                  setShowCashModal(false);
-                  setCart([]);
+                onClick={async () => {
+                  const success = await createOrder('cash');
+                  if (success) {
+                    alert('Payment confirmed! Order created.');
+                    setShowCashModal(false);
+                    setCart([]);
+                    setAmountReceived('');
+                  }
                 }}
-                disabled={(parseFloat(amountReceived) || 0) < getTotal()}
+                disabled={(parseFloat(amountReceived) || 0) < getTotal() || isProcessingPayment}
               >
-                <i className="fa-solid fa-check"></i> Confirm Payment
+                {isProcessingPayment ? (
+                  <><i className="fa-solid fa-spinner fa-spin"></i> Processing...</>
+                ) : (
+                  <><i className="fa-solid fa-check"></i> Confirm Payment</>
+                )}
               </button>
             </div>
           </div>

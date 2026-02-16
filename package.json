@@ -2,6 +2,7 @@
   "name": "pos-saas",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.28.0",
   "description": "Multi-tenant POS SaaS Platform",
   "scripts": {
     "dev": "turbo run dev",

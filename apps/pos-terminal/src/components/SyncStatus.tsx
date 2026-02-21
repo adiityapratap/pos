@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import './SyncStatus.css';
 
+// Detect if running in Electron (desktop mode)
+const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI;
+
 interface SyncStatusData {
   configured: boolean;
   isOnline: boolean;
@@ -33,6 +36,9 @@ export default function SyncStatus() {
   const [message, setMessage] = useState('');
 
   const fetchSyncStatus = useCallback(async () => {
+    // Only fetch in desktop mode
+    if (!isElectron) return;
+    
     try {
       const baseUrl = await getServerBaseUrl();
       const response = await fetch(`${baseUrl}/api/sync/status`);
@@ -46,6 +52,9 @@ export default function SyncStatus() {
   }, []);
 
   useEffect(() => {
+    // Only run in desktop mode
+    if (!isElectron) return;
+    
     // Fetch immediately on mount
     void (async () => {
       await fetchSyncStatus();
@@ -58,6 +67,11 @@ export default function SyncStatus() {
     
     return () => clearInterval(interval);
   }, [fetchSyncStatus]);
+
+  // Don't render anything in cloud/browser mode - sync is only for desktop
+  if (!isElectron) {
+    return null;
+  }
 
   const triggerSync = async () => {
     if (isSyncing) return;

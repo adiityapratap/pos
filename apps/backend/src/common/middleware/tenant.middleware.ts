@@ -4,6 +4,11 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
+    // Allow OPTIONS preflight requests to pass through for CORS
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
     const tenantSubdomain = req.headers['x-tenant-subdomain'] as string;
 
     // Paths that don't require tenant subdomain
@@ -29,7 +34,6 @@ export class TenantMiddleware implements NestMiddleware {
       }
 
       throw new UnauthorizedException('Tenant subdomain is required in x-tenant-subdomain header');
-    }
     }
 
     // Attach tenant subdomain to request for later use

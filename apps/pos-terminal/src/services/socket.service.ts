@@ -107,15 +107,26 @@ class SocketService {
 
   /**
    * Initialize socket connection
+   * Note: Socket connection is only used in desktop mode (Electron)
+   * In cloud/browser mode, we skip connection entirely
    */
   async connect(serverUrl?: string): Promise<boolean> {
+    // Detect if running in Electron (desktop mode)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const electronAPI = (window as any).electronAPI;
+    const isElectron = !!electronAPI;
+    
+    // Skip socket connection in cloud/browser mode - only connect in desktop
+    if (!isElectron && !serverUrl) {
+      console.log('[Socket] Skipping connection - running in cloud/browser mode');
+      return false;
+    }
+
     // Get server URL
     if (serverUrl) {
       this.serverUrl = serverUrl;
     } else {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const electronAPI = (window as any).electronAPI;
         if (electronAPI?.getServerUrl) {
           this.serverUrl = await electronAPI.getServerUrl();
         } else {

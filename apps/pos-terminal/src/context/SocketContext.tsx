@@ -1,11 +1,15 @@
 /**
  * BIZPOS Socket Context
  * React context for WebSocket connection management
+ * Note: Socket features only work in desktop mode (Electron), not in cloud browser mode
  */
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { socketService } from '../services/socket.service';
 import type { OrderEvent, MenuUpdateEvent, ConnectedTerminal } from '../services/socket.service';
+
+// Detect if running in Electron (desktop mode)
+const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI;
 
 interface SocketContextType {
   isConnected: boolean;
@@ -60,14 +64,17 @@ export function SocketProvider({ children, autoConnect = true }: SocketProviderP
     }
   }, []);
 
-  // Auto-connect on mount
+  // Auto-connect on mount - ONLY in desktop (Electron) mode
   useEffect(() => {
-    if (autoConnect) {
+    // Skip socket connection in cloud/browser mode - only connect in Electron
+    if (autoConnect && isElectron) {
       connect();
     }
 
     return () => {
-      disconnect();
+      if (isElectron) {
+        disconnect();
+      }
     };
   }, [autoConnect, connect, disconnect]);
 

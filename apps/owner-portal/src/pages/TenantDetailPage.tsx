@@ -14,6 +14,8 @@ import {
   resetTenantUserPassword,
   suspendTenant,
   activateTenant,
+  getTenantTheme,
+  updateTenantTheme,
   type TenantDetail,
   type TenantLocation,
   type TenantUser,
@@ -77,6 +79,10 @@ export default function TenantDetailPage() {
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
 
+  // Theme state
+  const [themeColor, setThemeColor] = useState('#2563eb');
+  const [themeLoading, setThemeLoading] = useState(false);
+
   // Fetch tenant data
   const fetchTenant = async () => {
     if (!id) return;
@@ -122,11 +128,36 @@ export default function TenantDetailPage() {
     }
   };
 
+  const fetchTheme = async () => {
+    if (!id) return;
+    try {
+      const data = await getTenantTheme(id);
+      setThemeColor(data.primaryColor);
+    } catch (err: any) {
+      console.error('Failed to load theme:', err);
+    }
+  };
+
   useEffect(() => {
     fetchTenant();
     fetchLocations();
     fetchUsers();
+    fetchTheme();
   }, [id]);
+
+  // Handle theme update
+  const handleSaveTheme = async () => {
+    if (!id) return;
+    setThemeLoading(true);
+    try {
+      await updateTenantTheme(id, themeColor);
+      alert('Theme color updated successfully!');
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update theme');
+    } finally {
+      setThemeLoading(false);
+    }
+  };
 
   // Handle tenant update
   const handleSaveTenant = async () => {
@@ -623,6 +654,58 @@ export default function TenantDetailPage() {
                 ) : (
                   <p className="font-medium text-gray-900">{tenant.maxProducts || '∞'}</p>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Theme Settings */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">POS Theme Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm text-gray-500 block mb-2">Primary Button Color</label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="color"
+                    value={themeColor}
+                    onChange={(e) => setThemeColor(e.target.value)}
+                    className="w-12 h-12 p-1 border border-gray-300 rounded-lg cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={themeColor}
+                    onChange={(e) => setThemeColor(e.target.value)}
+                    placeholder="#2563eb"
+                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                  />
+                  <button
+                    onClick={handleSaveTheme}
+                    disabled={themeLoading}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {themeLoading ? 'Saving...' : 'Save Theme'}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  This color will be applied to buttons and highlights in the POS terminal for this tenant.
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500 block mb-2">Preview</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    style={{ backgroundColor: themeColor }}
+                    className="px-4 py-2 text-white text-sm font-medium rounded-lg"
+                  >
+                    Sample Button
+                  </button>
+                  <span
+                    style={{ color: themeColor }}
+                    className="font-bold"
+                  >
+                    $24.99
+                  </span>
+                </div>
               </div>
             </div>
           </div>

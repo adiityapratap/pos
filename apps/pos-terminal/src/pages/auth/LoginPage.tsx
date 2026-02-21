@@ -43,8 +43,11 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-container">
         <div className="login-header">
-          <h1>POS System</h1>
+          <h1>BIZPOS</h1>
           <p>Enter your PIN to continue</p>
+          <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+            Default PINs: Admin (1234) | Cashier (0000)
+          </p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -97,6 +100,17 @@ export default function LoginPage() {
               {loading ? '...' : 'Enter'}
             </button>
           </div>
+          
+          {/* Setup link for Electron */}
+          {typeof window !== 'undefined' && (window as { electronAPI?: { isElectron?: boolean } }).electronAPI?.isElectron && (
+            <button 
+              type="button" 
+              className="setup-link"
+              onClick={() => navigate('/setup')}
+            >
+              ⚙️ Setup &amp; Network Settings
+            </button>
+          )}
         </form>
       </div>
     </div>

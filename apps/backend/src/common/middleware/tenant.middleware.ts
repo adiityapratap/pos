@@ -18,15 +18,18 @@ export class TenantMiddleware implements NestMiddleware {
     // Owner routes don't require tenant subdomain
     const isOwnerRoute = req.path.startsWith('/api/owner') || req.path.startsWith('/owner');
     const isPublicPath = publicPaths.includes(req.path);
+    // Tenant theme endpoint is public (e.g., /api/auth/tenant-theme/subdomain)
+    const isTenantThemeRoute = req.path.startsWith('/api/auth/tenant-theme/');
 
     // For auth endpoints, tenant is required
     if (!tenantSubdomain) {
-      // Allow public endpoints and owner routes
-      if (isPublicPath || isOwnerRoute) {
+      // Allow public endpoints, owner routes, and tenant theme endpoint
+      if (isPublicPath || isOwnerRoute || isTenantThemeRoute) {
         return next();
       }
 
       throw new UnauthorizedException('Tenant subdomain is required in x-tenant-subdomain header');
+    }
     }
 
     // Attach tenant subdomain to request for later use

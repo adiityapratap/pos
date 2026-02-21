@@ -371,4 +371,33 @@ export async function deleteTenantUser(tenantId: string, userId: string): Promis
   await ownerApi.delete(`/owner/tenants/${tenantId}/users/${userId}`);
 }
 
+// ==========================================
+// TENANT THEME SETTINGS
+// ==========================================
+
+export interface TenantTheme {
+  tenantId: string;
+  businessName: string;
+  primaryColor: string;
+}
+
+/**
+ * Get tenant theme settings
+ */
+export async function getTenantTheme(tenantId: string): Promise<TenantTheme> {
+  const response = await ownerApi.get(`/owner/tenants/${tenantId}/theme`);
+  return response.data;
+}
+
+/**
+ * Update tenant theme settings
+ */
+export async function updateTenantTheme(
+  tenantId: string,
+  primaryColor: string,
+): Promise<{ tenantId: string; primaryColor: string; message: string }> {
+  const response = await ownerApi.put(`/owner/tenants/${tenantId}/theme`, { primaryColor });
+  return response.data;
+}
+
 export default ownerApi;

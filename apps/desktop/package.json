@@ -10,18 +10,75 @@
     "pos:dev": "cd ../pos-terminal && npm run dev",
     "backend:dev": "cd ../backend && npm run start:dev",
     "dev": "concurrently \"npm run backend:dev\" \"npm run start\"",
-    "build": "cd ../pos-terminal && npm run build",
-    "clean": "rimraf dist"
+    "build:frontend": "cd ../pos-terminal && npm run build",
+    "build:win": "npm run build:frontend && electron-builder --win",
+    "build:win:portable": "npm run build:frontend && electron-builder --win portable",
+    "build:win:installer": "npm run build:frontend && electron-builder --win nsis",
+    "clean": "rimraf dist",
+    "init-db": "node local-server/init-db.js"
   },
   "keywords": ["pos", "point-of-sale", "bizpos", "restaurant", "retail"],
-  "author": "",
+  "author": "BIZPOS",
   "license": "ISC",
   "type": "commonjs",
+  "build": {
+    "appId": "com.bizpos.desktop",
+    "productName": "BIZPOS",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "local-server/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../pos-terminal/dist",
+        "to": "app/dist",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "${productName}-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "BIZPOS"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}"
+    }
+  },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.6.2",
     "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
     "cross-env": "^10.1.0",
-    "electron": "^40.1.0",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4",
+    "uuid": "^9.0.0",
     "wait-on": "^9.0.3"
+  },
+  "devDependencies": {
+    "electron": "^40.1.0",
+    "electron-builder": "^25.1.8"
   }
 }

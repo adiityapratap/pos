@@ -12,6 +12,7 @@ import { MenuModule } from './menu/menu.module';
 import { OwnerModule } from './owner/owner.module';
 import { LocationsModule } from './locations/locations.module';
 import { OrdersModule } from './orders/orders.module';
+import { WebsocketsModule } from './websockets/websockets.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
@@ -32,6 +33,7 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     OwnerModule,
     LocationsModule,
     OrdersModule,
+    WebsocketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

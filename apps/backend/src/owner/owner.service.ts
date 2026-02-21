@@ -784,4 +784,75 @@ export class OwnerService {
       data: { deletedAt: new Date(), isActive: false },
     });
   }
+
+  /**
+   * Get tenant theme settings
+   */
+  async getTenantTheme(tenantId: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: {
+        id: true,
+        businessName: true,
+        metadata: true,
+      },
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const metadata = tenant.metadata as Record<string, any> || {};
+    const theme = metadata.theme || {};
+
+    return {
+      tenantId: tenant.id,
+      businessName: tenant.businessName,
+      primaryColor: theme.primaryColor || '#2563eb',
+    };
+  }
+
+  /**
+   * Update tenant theme settings
+   */
+  async updateTenantTheme(tenantId: string, primaryColor: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { metadata: true },
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    // Validate hex color format
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorRegex.test(primaryColor)) {
+      throw new BadRequestException('Invalid color format. Use hex format (e.g., #2563eb)');
+    }
+
+    // Merge existing metadata with new theme
+    const existingMetadata = tenant.metadata as Record<string, any> || {};
+    const updatedMetadata = {
+      ...existingMetadata,
+      theme: {
+        ...(existingMetadata.theme || {}),
+        primaryColor,
+      },
+    };
+
+    const updated = await this.prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        metadata: updatedMetadata,
+        updatedAt: new Date(),
+      },
+    });
+
+    return {
+      tenantId: updated.id,
+      primaryColor,
+      message: 'Theme updated successfully',
+    };
+  }
 }

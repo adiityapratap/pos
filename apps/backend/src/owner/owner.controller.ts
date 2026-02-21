@@ -229,4 +229,29 @@ export class OwnerController {
   ) {
     return this.ownerService.deleteTenantUser(tenantId, userId);
   }
+
+  // ==========================================
+  // TENANT THEME/SETTINGS MANAGEMENT
+  // ==========================================
+
+  /**
+   * Get tenant theme settings
+   * GET /api/owner/tenants/:id/theme
+   */
+  @Get('tenants/:id/theme')
+  getTenantTheme(@Param('id') id: string) {
+    return this.ownerService.getTenantTheme(id);
+  }
+
+  /**
+   * Update tenant theme settings
+   * PUT /api/owner/tenants/:id/theme
+   */
+  @Put('tenants/:id/theme')
+  updateTenantTheme(
+    @Param('id') id: string,
+    @Body() body: { primaryColor: string },
+  ) {
+    return this.ownerService.updateTenantTheme(id, body.primaryColor);
+  }
 }

@@ -1,7 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Param,
   HttpCode,
   HttpStatus,
   Headers,
@@ -17,6 +19,17 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   
   constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Get tenant theme settings by subdomain
+   * GET /auth/tenant-theme/:subdomain
+   * Public endpoint - no auth required
+   */
+  @Get('tenant-theme/:subdomain')
+  async getTenantTheme(@Param('subdomain') subdomain: string) {
+    this.logger.log(`Fetching theme for tenant: ${subdomain}`);
+    return this.authService.getTenantTheme(subdomain);
+  }
 
   /**
    * PIN Login for POS terminals

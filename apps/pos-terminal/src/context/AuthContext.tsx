@@ -1,6 +1,6 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { apiClient } from '../config/api';
+import { apiClient, initializeApiClient, isElectron } from '../config/api';
 
 interface User {
   id: string;
@@ -8,7 +8,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
-  displayName: string;
+  displayName?: string;
 }
 
 interface AuthContextType {
@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isOfflineMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,19 +31,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userData = localStorage.getItem('pos_user');
     return userData ? JSON.parse(userData) : null;
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOfflineMode] = useState(isElectron);
+
+  // Initialize API on mount
+  useEffect(() => {
+    const init = async () => {
+      if (isElectron) {
+        await initializeApiClient();
+      }
+      setIsLoading(false);
+    };
+    init();
+  }, []);
 
   const login = async (employeeId: string, pin: string) => {
+    // For local/offline mode, use PIN directly
+    // employeeId is ignored for local mode, we just use PIN
     const response = await apiClient.post('/auth/pin-login', {
-      employeeId,
-      pin,
+      pin: pin,
+      employeeId: employeeId, // May be used by cloud server
     });
 
-    const { accessToken: token, user: userData } = response.data;
+    const { accessToken: token, user: userData, token: altToken } = response.data;
+    const finalToken = token || altToken;
     
-    setAccessToken(token);
-    setUser(userData);
-    localStorage.setItem('pos_accessToken', token);
-    localStorage.setItem('pos_user', JSON.stringify(userData));
+    // Handle different response formats
+    const finalUser: User = {
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName || userData.first_name || '',
+      lastName: userData.lastName || userData.last_name || '',
+      role: userData.role,
+      displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+    };
+    
+    setAccessToken(finalToken);
+    setUser(finalUser);
+    localStorage.setItem('pos_accessToken', finalToken);
+    localStorage.setItem('pos_user', JSON.stringify(finalUser));
   };
 
   const logout = () => {
@@ -60,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         isAuthenticated: !!accessToken,
-        isLoading: false,
+        isLoading,
+        isOfflineMode,
       }}
     >
       {children}

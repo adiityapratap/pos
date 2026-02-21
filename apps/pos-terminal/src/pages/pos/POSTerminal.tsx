@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../../config/api';
+import axios from 'axios';
+import { apiClient, TENANT_SUBDOMAIN } from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket, useOrderEvents, useMenuRefreshEvent } from '../../context/SocketContext';
+import SyncStatus from '../../components/SyncStatus';
 import './POSTerminal.css';
 import logoImg from '../../assets/bizadminfav.jpeg';
 
@@ -79,6 +82,7 @@ type ViewMode = 'products' | 'product-detail' | 'combos';
 const POSTerminal: React.FC = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const { isConnected, emitOrderCreated, emitOrderCompleted, registerTerminal } = useSocket();
   
   const [defaultLocationId, setDefaultLocationId] = useState<string>('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -126,7 +130,72 @@ const POSTerminal: React.FC = () => {
     'default': 'fa-utensils'
   };
 
+  // Socket event handlers for real-time updates
+  const handleMenuRefresh = useCallback(() => {
+    console.log('[Socket] Refreshing menu data...');
+    loadCategories();
+    loadProducts();
+    loadSubcategories();
+    loadCombos();
+  }, []);
+
+  // Listen for menu refresh events from other terminals
+  useMenuRefreshEvent(handleMenuRefresh);
+
+  // Listen for order events (for display/notification purposes)
+  useOrderEvents({
+    onOrderCreated: useCallback((order: { orderNumber?: string; orderId?: string }) => {
+      console.log('[Socket] New order from another terminal:', order.orderNumber);
+      // Could show a toast notification here
+    }, []),
+    onOrderCompleted: useCallback((order: { orderNumber?: string; orderId?: string }) => {
+      console.log('[Socket] Order completed on another terminal:', order.orderNumber);
+    }, []),
+  });
+
+  // Register this terminal with the socket server
   useEffect(() => {
+    if (isConnected && user) {
+      registerTerminal(`POS Terminal - ${user.firstName || 'Staff'}`, 'pos', defaultLocationId || undefined);
+    }
+  }, [isConnected, user, defaultLocationId, registerTerminal]);
+
+  // Load tenant theme and apply CSS variables
+  const loadTenantTheme = async () => {
+    try {
+      // Get API base URL for theme endpoint (without tenant header requirement)
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const response = await axios.get(`${apiBaseUrl}/auth/tenant-theme/${TENANT_SUBDOMAIN}`);
+      const { primaryColor } = response.data;
+      
+      if (primaryColor) {
+        // Apply primary color to CSS variables
+        document.documentElement.style.setProperty('--primary-color', primaryColor);
+        // Calculate hover color (slightly darker)
+        const hoverColor = darkenColor(primaryColor, 15);
+        document.documentElement.style.setProperty('--primary-hover', hoverColor);
+        // Calculate light version for backgrounds
+        document.documentElement.style.setProperty('--primary-light', `${primaryColor}1a`);
+        console.log('[Theme] Applied tenant theme color:', primaryColor);
+      }
+    } catch (error) {
+      console.error('Failed to load tenant theme:', error);
+      // Default color is already set in CSS
+    }
+  };
+
+  // Helper function to darken a hex color
+  const darkenColor = (hex: string, percent: number): string => {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.max((num >> 16) - amt, 0);
+    const G = Math.max((num >> 8 & 0x00FF) - amt, 0);
+    const B = Math.max((num & 0x0000FF) - amt, 0);
+    return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+  };
+
+  useEffect(() => {
+    loadTenantTheme();
     loadCategories();
     loadProducts();
     loadSubcategories();
@@ -197,6 +266,16 @@ const POSTerminal: React.FC = () => {
       const response = await apiClient.post('/orders', orderPayload);
       const order = response.data;
 
+      // Emit socket event for new order
+      emitOrderCreated({
+        orderId: order.id,
+        orderNumber: order.orderNumber || orderNumber,
+        items: orderPayload.items,
+        total: getTotal(),
+        status: 'pending',
+        locationId: defaultLocationId,
+      });
+
       // Mark as paid
       await apiClient.put(`/orders/${order.id}/payment`, {
         paymentStatus: 'paid',
@@ -208,6 +287,17 @@ const POSTerminal: React.FC = () => {
       await apiClient.put(`/orders/${order.id}/status`, {
         orderStatus: 'completed',
       });
+
+      // Emit socket event for completed order
+      emitOrderCompleted({
+        orderId: order.id,
+        orderNumber: order.orderNumber || orderNumber,
+        status: 'completed',
+        locationId: defaultLocationId,
+      });
+
+      // Clear cart after successful order
+      setCart([]);
 
       return true;
     } catch (error) {
@@ -787,6 +877,9 @@ const POSTerminal: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* Sync Status Widget */}
+      <SyncStatus />
     </div>
   );
 };

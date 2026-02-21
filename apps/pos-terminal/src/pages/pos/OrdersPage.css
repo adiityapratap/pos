@@ -1,0 +1,299 @@
+/* OrdersPage Light Theme Styles */
+
+/* Main container - override dark bg */
+.orders-page {
+  background: var(--bg-main, #f4f6fa) !important;
+  color: var(--text-primary, #111827) !important;
+}
+
+/* Sidebar */
+.orders-sidebar {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.sidebar-logo {
+  background: var(--primary-color, #2563eb) !important;
+}
+
+.sidebar-nav-item {
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.sidebar-nav-item:hover {
+  color: var(--text-primary, #111827) !important;
+  background: var(--bg-hover, #f3f4f6) !important;
+}
+
+.sidebar-nav-item.active {
+  color: var(--primary-color, #2563eb) !important;
+  border-color: var(--primary-color, #2563eb) !important;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08) 0%, transparent 100%) !important;
+}
+
+.sidebar-btn {
+  background: var(--bg-input, #f4f6fa) !important;
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.sidebar-btn:hover {
+  background: var(--bg-hover, #e5e7eb) !important;
+}
+
+/* Header */
+.orders-header {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.header-title {
+  color: var(--text-primary, #111827) !important;
+}
+
+.header-subtitle {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+/* Search */
+.orders-search {
+  background: var(--bg-input, #f4f6fa) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-primary, #111827) !important;
+}
+
+.orders-search:focus {
+  border-color: var(--primary-color, #2563eb) !important;
+}
+
+.search-shortcut {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+/* Content area */
+.orders-content {
+  background: var(--bg-main, #f4f6fa) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+/* Stats cards */
+.stat-card {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.stat-label {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.stat-value {
+  color: var(--text-primary, #111827) !important;
+}
+
+/* Filter bar */
+.filter-bar {
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.filter-group {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.filter-btn {
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.filter-btn:hover {
+  color: var(--text-primary, #111827) !important;
+}
+
+.filter-btn.active {
+  background: var(--primary-color, #2563eb) !important;
+  color: white !important;
+}
+
+.filter-divider {
+  background: var(--border-color, #e5e7eb) !important;
+}
+
+.type-filter-btn {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.type-filter-btn:hover,
+.type-filter-btn.active {
+  border-color: var(--primary-color, #2563eb) !important;
+  color: var(--primary-color, #2563eb) !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Order cards */
+.order-card {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.order-card:hover {
+  border-color: rgba(37, 99, 235, 0.5) !important;
+}
+
+.order-card.selected {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--primary-color, #2563eb) !important;
+}
+
+.order-number {
+  color: var(--text-primary, #111827) !important;
+}
+
+.order-time {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.customer-name {
+  color: var(--text-primary, #111827) !important;
+}
+
+.items-count {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.order-items-preview {
+  background: var(--bg-input, #f4f6fa) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.item-price {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.order-footer {
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.payment-status {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.order-total {
+  color: var(--text-primary, #111827) !important;
+}
+
+.order-action-btn {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.order-action-btn:hover {
+  background: var(--bg-hover, #f3f4f6) !important;
+}
+
+.order-action-btn.primary {
+  background: var(--primary-color, #2563eb) !important;
+  color: white !important;
+  border-color: var(--primary-color, #2563eb) !important;
+}
+
+/* Right panel */
+.order-panel {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.panel-header {
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.panel-title {
+  color: var(--text-primary, #111827) !important;
+}
+
+.customer-info {
+  background: var(--bg-input, #f4f6fa) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.customer-info-name {
+  color: var(--text-primary, #111827) !important;
+}
+
+.customer-info-phone {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.items-title {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.item-quantity {
+  background: var(--bg-hover, #e5e7eb) !important;
+  color: var(--text-primary, #111827) !important;
+}
+
+.item-name {
+  color: var(--text-primary, #111827) !important;
+}
+
+.item-modifier {
+  background: var(--bg-input, #f4f6fa) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-secondary, #6b7280) !important;
+}
+
+.divider {
+  background: var(--border-color, #e5e7eb) !important;
+}
+
+/* Panel footer */
+.panel-footer {
+  background: var(--bg-input, #f4f6fa) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+}
+
+.totals-row {
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.totals-total-label {
+  color: var(--text-primary, #111827) !important;
+}
+
+.totals-total-value {
+  color: var(--primary-color, #2563eb) !important;
+}
+
+.payment-option {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-muted, #9ca3af) !important;
+}
+
+.payment-option:hover {
+  background: var(--bg-hover, #f3f4f6) !important;
+}
+
+.payment-option.selected {
+  border-color: var(--primary-color, #2563eb) !important;
+  color: var(--primary-color, #2563eb) !important;
+}
+
+.panel-btn {
+  background: var(--bg-card, #ffffff) !important;
+  border-color: var(--border-color, #e5e7eb) !important;
+  color: var(--text-primary, #111827) !important;
+}
+
+.panel-btn:hover {
+  background: var(--bg-hover, #f3f4f6) !important;
+}
+
+/* Empty state */
+.empty-state {
+  color: var(--text-muted, #9ca3af) !important;
+}

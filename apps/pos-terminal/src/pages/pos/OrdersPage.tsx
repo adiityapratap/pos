@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import logoImg from '../../assets/bizadminfav.jpeg';
+import './OrdersPage.css';
 
 interface OrderItem {
   id: string;
@@ -179,45 +180,45 @@ const OrdersPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#0B1120] text-slate-200">
+    <div className="orders-page flex h-screen w-full bg-[#f4f6fa] text-gray-900">
       {/* Left Sidebar */}
-      <aside className="w-[80px] h-full bg-[#151E32] flex flex-col items-center py-6 border-r border-[#1E293B] z-20 shadow-xl">
-        <div className="mb-8 w-12 h-12 flex items-center justify-center bg-blue-600 rounded-xl shadow-lg overflow-hidden">
+      <aside className="orders-sidebar w-[80px] h-full bg-white flex flex-col items-center py-6 border-r border-gray-200 z-20 shadow-sm">
+        <div className="sidebar-logo mb-8 w-12 h-12 flex items-center justify-center bg-blue-600 rounded-xl shadow-lg overflow-hidden">
           <img src={logoImg} alt="Logo" className="w-full h-full object-cover" />
         </div>
 
         <nav className="flex-1 w-full flex flex-col gap-2">
-          <a onClick={() => navigate('/')} className="w-full h-16 flex flex-col items-center justify-center text-slate-400 hover:text-white hover:bg-[#1E293B] transition-all cursor-pointer group">
+          <a onClick={() => navigate('/')} className="sidebar-nav-item w-full h-16 flex flex-col items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer group">
             <i className="fa-solid fa-house text-xl mb-1 group-hover:scale-110 transition-transform"></i>
             <span className="text-[10px] font-medium">Home</span>
           </a>
           
-          <a onClick={() => navigate('/')} className="w-full h-16 flex flex-col items-center justify-center text-slate-400 hover:text-white hover:bg-[#1E293B] transition-all cursor-pointer group">
+          <a onClick={() => navigate('/')} className="sidebar-nav-item w-full h-16 flex flex-col items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer group">
             <i className="fa-solid fa-book-open text-xl mb-1 group-hover:scale-110 transition-transform"></i>
             <span className="text-[10px] font-medium">Menu</span>
           </a>
 
-          <a className="w-full h-16 flex flex-col items-center justify-center text-slate-400 hover:text-white hover:bg-[#1E293B] transition-all cursor-pointer group">
+          <a className="sidebar-nav-item w-full h-16 flex flex-col items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer group">
             <i className="fa-solid fa-credit-card text-xl mb-1 group-hover:scale-110 transition-transform"></i>
             <span className="text-[10px] font-medium">Pay</span>
           </a>
 
-          <a className="w-full h-16 flex flex-col items-center justify-center text-blue-400 border-l-4 border-blue-500" style={{ background: 'linear-gradient(90deg, rgba(59,130,246,0.1) 0%, transparent 100%)' }}>
+          <a className="sidebar-nav-item active w-full h-16 flex flex-col items-center justify-center text-blue-600 border-l-4 border-blue-600" style={{ background: 'linear-gradient(90deg, rgba(37,99,235,0.08) 0%, transparent 100%)' }}>
             <i className="fa-solid fa-receipt text-xl mb-1"></i>
             <span className="text-[10px] font-bold">Orders</span>
           </a>
 
-          <a className="w-full h-16 flex flex-col items-center justify-center text-slate-400 hover:text-white hover:bg-[#1E293B] transition-all cursor-pointer group">
+          <a className="sidebar-nav-item w-full h-16 flex flex-col items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all cursor-pointer group">
             <i className="fa-solid fa-chart-pie text-xl mb-1 group-hover:scale-110 transition-transform"></i>
             <span className="text-[10px] font-medium">Report</span>
           </a>
         </nav>
 
         <div className="mt-auto w-full flex flex-col gap-4 items-center pb-4">
-          <button className="w-10 h-10 rounded-full bg-[#1E293B] hover:bg-[#334155] flex items-center justify-center text-slate-300 transition-colors">
+          <button className="sidebar-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
             <i className="fa-solid fa-gear"></i>
           </button>
-          <button onClick={logout} className="w-10 h-10 rounded-full bg-[#1E293B] hover:bg-red-500/20 flex items-center justify-center text-slate-300 hover:text-red-400 transition-colors">
+          <button onClick={logout} className="sidebar-btn w-10 h-10 rounded-full bg-gray-100 hover:bg-red-50 flex items-center justify-center text-gray-600 hover:text-red-500 transition-colors">
             <i className="fa-solid fa-arrow-right-from-bracket"></i>
           </button>
         </div>
@@ -227,11 +228,11 @@ const OrdersPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full relative">
         
         {/* Top Header */}
-        <header className="h-16 bg-[#151E32]/90 backdrop-blur-md border-b border-[#1E293B] flex items-center justify-between px-6 z-10 sticky top-0 w-full">
+        <header className="orders-header h-16 bg-white/95 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 z-10 sticky top-0 w-full">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
-              <h1 className="text-lg font-bold text-white tracking-wide">BIZPOS</h1>
-              <span className="text-xs text-slate-400 flex items-center gap-2">
+              <h1 className="header-title text-lg font-bold text-gray-900 tracking-wide">BIZPOS</h1>
+              <span className="header-subtitle text-xs text-gray-500 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 Online • {formatDate(currentTime)} • {formatTime(currentTime)}
               </span>
@@ -241,23 +242,23 @@ const OrdersPage: React.FC = () => {
           <div className="flex-1 max-w-2xl mx-8">
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <i className="fa-solid fa-magnifying-glass text-slate-500 group-focus-within:text-blue-400 transition-colors"></i>
+                <i className="fa-solid fa-magnifying-glass text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
               </div>
               <input 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#0B1120] border border-[#334155] text-white text-sm rounded-xl block pl-12 p-3 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+                className="orders-search w-full bg-gray-100 border border-gray-200 text-gray-900 text-sm rounded-xl block pl-12 p-3 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 placeholder="Search order #, customer, table, or phone..."
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <span className="text-xs bg-[#1E293B] text-slate-400 px-2 py-1 rounded border border-[#334155]">⌘K</span>
+                <span className="search-shortcut text-xs bg-white text-gray-400 px-2 py-1 rounded border border-gray-200">⌘K</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button onClick={() => setShowPanel(!showPanel)} className="p-2 text-blue-400 hover:bg-[#1E293B] rounded-lg transition-colors">
+            <button onClick={() => setShowPanel(!showPanel)} className="p-2 text-blue-600 hover:bg-gray-100 rounded-lg transition-colors">
               <i className="fa-solid fa-sidebar text-lg"></i>
             </button>
           </div>
@@ -267,59 +268,59 @@ const OrdersPage: React.FC = () => {
         <div className="flex flex-1 overflow-hidden">
           
           {/* Main Orders Area */}
-          <main className="flex-1 flex flex-col bg-[#0B1120] overflow-hidden relative border-r border-[#1E293B]">
+          <main className="orders-content flex-1 flex flex-col bg-[#f4f6fa] overflow-hidden relative border-r border-gray-200">
             
             {/* Stats Row */}
             <div className="px-6 py-5 grid grid-cols-4 gap-4">
-              <div className="bg-[#151E32] p-3 rounded-xl border border-[#1E293B] flex items-center justify-between shadow-sm">
+              <div className="stat-card bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs text-slate-400 uppercase font-semibold">Total Orders</p>
-                  <p className="text-xl font-bold text-white mt-1">{stats.totalOrders}</p>
+                  <p className="stat-label text-xs text-gray-500 uppercase font-semibold">Total Orders</p>
+                  <p className="stat-value text-xl font-bold text-gray-900 mt-1">{stats.totalOrders}</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
                   <i className="fa-solid fa-clipboard-list"></i>
                 </div>
               </div>
-              <div className="bg-[#151E32] p-3 rounded-xl border border-[#1E293B] flex items-center justify-between shadow-sm">
+              <div className="stat-card bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs text-slate-400 uppercase font-semibold">Total Sales</p>
-                  <p className="text-xl font-bold text-emerald-400 mt-1">${Number(stats.totalSales).toFixed(2)}</p>
+                  <p className="stat-label text-xs text-gray-500 uppercase font-semibold">Total Sales</p>
+                  <p className="text-xl font-bold text-emerald-500 mt-1">${Number(stats.totalSales).toFixed(2)}</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500">
                   <i className="fa-solid fa-dollar-sign"></i>
                 </div>
               </div>
-              <div className="bg-[#151E32] p-3 rounded-xl border border-[#1E293B] flex items-center justify-between shadow-sm ring-1 ring-orange-500/30">
+              <div className="stat-card bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm ring-1 ring-orange-300">
                 <div>
-                  <p className="text-xs text-orange-400 uppercase font-semibold">Open Orders</p>
-                  <p className="text-xl font-bold text-orange-400 mt-1">{stats.openOrders}</p>
+                  <p className="text-xs text-orange-500 uppercase font-semibold">Open Orders</p>
+                  <p className="text-xl font-bold text-orange-500 mt-1">{stats.openOrders}</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400 animate-pulse">
+                <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500 animate-pulse">
                   <i className="fa-solid fa-fire"></i>
                 </div>
               </div>
-              <div className="bg-[#151E32] p-3 rounded-xl border border-[#1E293B] flex items-center justify-between shadow-sm">
+              <div className="stat-card bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-xs text-slate-400 uppercase font-semibold">Completed</p>
-                  <p className="text-xl font-bold text-white mt-1">{stats.completedOrders}</p>
+                  <p className="stat-label text-xs text-gray-500 uppercase font-semibold">Completed</p>
+                  <p className="stat-value text-xl font-bold text-gray-900 mt-1">{stats.completedOrders}</p>
                 </div>
-                <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400">
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
                   <i className="fa-solid fa-check-double"></i>
                 </div>
               </div>
             </div>
 
             {/* Filter Bar */}
-            <div className="px-6 pb-4 border-b border-[#1E293B] flex items-center gap-3 overflow-x-auto">
-              <div className="flex bg-[#151E32] rounded-lg p-1 border border-[#1E293B] shrink-0">
+            <div className="filter-bar px-6 pb-4 border-b border-gray-200 flex items-center gap-3 overflow-x-auto">
+              <div className="filter-group flex bg-white rounded-lg p-1 border border-gray-200 shrink-0">
                 {(['all', 'open', 'preparing', 'ready', 'completed'] as StatusFilter[]).map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
-                    className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    className={`filter-btn px-4 py-1.5 rounded-md text-xs font-medium transition-all ${
                       statusFilter === status
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'active bg-blue-600 text-white shadow-sm'
+                        : 'text-gray-500 hover:text-gray-900'
                     }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -327,35 +328,35 @@ const OrdersPage: React.FC = () => {
                 ))}
               </div>
               
-              <div className="h-6 w-px bg-[#334155] mx-1 shrink-0"></div>
+              <div className="filter-divider h-6 w-px bg-gray-200 mx-1 shrink-0"></div>
 
               <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => setOrderTypeFilter(orderTypeFilter === 'dine_in' ? 'all' : 'dine_in')}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
+                  className={`type-filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
                     orderTypeFilter === 'dine_in'
-                      ? 'border-blue-500 text-blue-400 bg-blue-500/10'
-                      : 'border-[#334155] bg-[#151E32] text-slate-300 hover:border-blue-500 hover:text-blue-400'
+                      ? 'active border-blue-500 text-blue-600 bg-blue-50'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-blue-500 hover:text-blue-600'
                   }`}
                 >
                   <i className="fa-solid fa-utensils text-[10px]"></i> Dine In
                 </button>
                 <button
                   onClick={() => setOrderTypeFilter(orderTypeFilter === 'takeaway' ? 'all' : 'takeaway')}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
+                  className={`type-filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
                     orderTypeFilter === 'takeaway'
-                      ? 'border-blue-500 text-blue-400 bg-blue-500/10'
-                      : 'border-[#334155] bg-[#151E32] text-slate-300 hover:border-blue-500 hover:text-blue-400'
+                      ? 'active border-blue-500 text-blue-600 bg-blue-50'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-blue-500 hover:text-blue-600'
                   }`}
                 >
                   <i className="fa-solid fa-bag-shopping text-[10px]"></i> Takeaway
                 </button>
                 <button
                   onClick={() => setOrderTypeFilter(orderTypeFilter === 'delivery' ? 'all' : 'delivery')}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
+                  className={`type-filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
                     orderTypeFilter === 'delivery'
-                      ? 'border-blue-500 text-blue-400 bg-blue-500/10'
-                      : 'border-[#334155] bg-[#151E32] text-slate-300 hover:border-blue-500 hover:text-blue-400'
+                      ? 'active border-blue-500 text-blue-600 bg-blue-50'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-blue-500 hover:text-blue-600'
                   }`}
                 >
                   <i className="fa-solid fa-truck text-[10px]"></i> Delivery
@@ -370,7 +371,7 @@ const OrdersPage: React.FC = () => {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                 </div>
               ) : orders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                <div className="empty-state flex flex-col items-center justify-center h-64 text-gray-400">
                   <i className="fa-solid fa-receipt text-4xl mb-4"></i>
                   <p>No orders found</p>
                 </div>
@@ -385,10 +386,10 @@ const OrdersPage: React.FC = () => {
                       <div
                         key={order.id}
                         onClick={() => { setSelectedOrder(order); setShowPanel(true); }}
-                        className={`rounded-xl p-5 shadow-lg cursor-pointer relative transition-all ${
+                        className={`order-card rounded-xl p-5 shadow-sm cursor-pointer relative transition-all ${
                           isSelected
-                            ? 'bg-[#1E293B] border-2 border-blue-500'
-                            : 'bg-[#151E32] border border-[#334155] hover:border-blue-500/50'
+                            ? 'selected bg-white border-2 border-blue-500'
+                            : 'bg-white border border-gray-200 hover:border-blue-300'
                         }`}
                       >
                         <div className="absolute top-0 right-0 p-3">
@@ -401,7 +402,7 @@ const OrdersPage: React.FC = () => {
                         <div className="flex justify-between items-start mb-4">
                           <div>
                             <div className="flex items-center gap-3 mb-1">
-                              <h3 className="text-xl font-bold text-white">{order.displayNumber}</h3>
+                              <h3 className="order-number text-xl font-bold text-gray-900">{order.displayNumber}</h3>
                               {order.tableNumber && (
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${typeBadge.bg} ${typeBadge.text} border ${typeBadge.border}`}>
                                   TABLE {order.tableNumber}
@@ -413,10 +414,10 @@ const OrdersPage: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-slate-400 flex items-center gap-2">
+                            <p className="order-time text-sm text-gray-500 flex items-center gap-2">
                               <i className="fa-regular fa-clock"></i>
                               {new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                              <span className={`font-mono text-xs ${order.orderStatus === 'preparing' ? 'text-orange-400' : 'text-slate-500'}`}>
+                              <span className={`font-mono text-xs ${order.orderStatus === 'preparing' ? 'text-orange-500' : 'text-gray-400'}`}>
                                 ({getTimeSince(order.createdAt)})
                               </span>
                             </p>
@@ -428,49 +429,49 @@ const OrdersPage: React.FC = () => {
                             <div className={`w-8 h-8 rounded-full ${getAvatarColor(order.customerName)} flex items-center justify-center text-xs font-bold text-white`}>
                               {getInitials(order.customerName)}
                             </div>
-                            <span className="font-medium text-slate-200">{order.customerName || 'Guest'}</span>
-                            <span className="text-xs text-slate-500">• {order.orderItems.length} items</span>
+                            <span className="customer-name font-medium text-gray-900">{order.customerName || 'Guest'}</span>
+                            <span className="items-count text-xs text-gray-500">• {order.orderItems.length} items</span>
                           </div>
-                          <div className="bg-[#0B1120]/50 rounded-lg p-3 text-sm text-slate-300 border border-[#334155]">
+                          <div className="order-items-preview bg-gray-50 rounded-lg p-3 text-sm text-gray-600 border border-gray-200">
                             {order.orderItems.slice(0, 2).map((item, idx) => (
                               <p key={idx} className="flex justify-between mt-1 first:mt-0">
                                 <span>{item.quantity}x {item.itemName}</span>
-                                <span className="text-slate-500">${Number(item.lineTotal).toFixed(2)}</span>
+                                <span className="item-price text-gray-400">${Number(item.lineTotal).toFixed(2)}</span>
                               </p>
                             ))}
                             {order.orderItems.length > 2 && (
-                              <p className="text-xs text-slate-500 mt-1 italic">+ {order.orderItems.length - 2} more items...</p>
+                              <p className="text-xs text-gray-400 mt-1 italic">+ {order.orderItems.length - 2} more items...</p>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#334155]">
-                          <div className="flex items-center gap-2 text-slate-400 text-sm">
+                        <div className="order-footer flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                          <div className="payment-status flex items-center gap-2 text-gray-500 text-sm">
                             {getPaymentIcon(order.paymentStatus)}
                             <span className="capitalize">{order.paymentStatus}</span>
                           </div>
-                          <span className="text-xl font-bold text-white">${Number(order.totalAmount).toFixed(2)}</span>
+                          <span className="order-total text-xl font-bold text-gray-900">${Number(order.totalAmount).toFixed(2)}</span>
                         </div>
 
                         <div className="mt-4 grid grid-cols-4 gap-2">
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setShowPanel(true); }}
-                            className="py-2 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-500"
+                            className="order-action-btn primary py-2 rounded bg-blue-600 text-white text-xs font-medium hover:bg-blue-500"
                           >
                             View
                           </button>
-                          <button className="py-2 rounded bg-[#151E32] text-slate-300 text-xs font-medium hover:bg-[#334155] border border-[#334155]">
+                          <button className="order-action-btn py-2 rounded bg-white text-gray-600 text-xs font-medium hover:bg-gray-100 border border-gray-200">
                             Print
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, 'cancelled'); }}
-                            className="py-2 rounded bg-[#151E32] text-slate-300 text-xs font-medium hover:bg-[#334155] border border-[#334155]"
+                            className="order-action-btn py-2 rounded bg-white text-gray-600 text-xs font-medium hover:bg-gray-100 border border-gray-200"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleRefund(order.id); }}
-                            className="py-2 rounded bg-[#151E32] text-slate-300 text-xs font-medium hover:bg-[#334155] border border-[#334155]"
+                            className="order-action-btn py-2 rounded bg-white text-gray-600 text-xs font-medium hover:bg-gray-100 border border-gray-200"
                           >
                             Refund
                           </button>
@@ -485,28 +486,28 @@ const OrdersPage: React.FC = () => {
 
           {/* Right Side Panel - Order Details */}
           {showPanel && selectedOrder && (
-            <aside className="w-[30%] min-w-[380px] bg-[#151E32] border-l border-[#1E293B] flex flex-col h-full shadow-2xl z-10">
+            <aside className="order-panel w-[30%] min-w-[380px] bg-white border-l border-gray-200 flex flex-col h-full shadow-lg z-10">
               
               {/* Panel Header */}
-              <div className="p-5 border-b border-[#1E293B]">
+              <div className="panel-header p-5 border-b border-gray-200">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold text-white">Order {selectedOrder.displayNumber}</h2>
+                  <h2 className="panel-title text-2xl font-bold text-gray-900">Order {selectedOrder.displayNumber}</h2>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusBadge(selectedOrder.orderStatus).bg} ${getStatusBadge(selectedOrder.orderStatus).text} border ${getStatusBadge(selectedOrder.orderStatus).border}`}>
                     {getStatusBadge(selectedOrder.orderStatus).label}
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-3 p-3 bg-[#0B1120] rounded-lg border border-[#334155]">
+                <div className="customer-info flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className={`w-10 h-10 rounded-full ${getAvatarColor(selectedOrder.customerName)} flex items-center justify-center text-sm font-bold text-white`}>
                     {getInitials(selectedOrder.customerName)}
                   </div>
                   <div className="flex-1">
-                    <p className="font-bold text-white text-sm">{selectedOrder.customerName || 'Guest'}</p>
-                    <p className="text-xs text-slate-400">{selectedOrder.customerPhone || 'No phone'}</p>
+                    <p className="customer-info-name font-bold text-gray-900 text-sm">{selectedOrder.customerName || 'Guest'}</p>
+                    <p className="customer-info-phone text-xs text-gray-500">{selectedOrder.customerPhone || 'No phone'}</p>
                   </div>
                   {selectedOrder.tableNumber && (
                     <div className="text-right">
-                      <p className="text-xs font-bold text-purple-300 bg-purple-500/20 px-2 py-1 rounded">TABLE {selectedOrder.tableNumber}</p>
+                      <p className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">TABLE {selectedOrder.tableNumber}</p>
                     </div>
                   )}
                 </div>
@@ -514,26 +515,26 @@ const OrdersPage: React.FC = () => {
 
               {/* Scrollable Item List */}
               <div className="flex-1 overflow-y-auto p-5">
-                <h3 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-wider">Order Items ({selectedOrder.orderItems.length})</h3>
+                <h3 className="items-title text-xs font-bold text-gray-500 uppercase mb-4 tracking-wider">Order Items ({selectedOrder.orderItems.length})</h3>
                 
                 <div className="space-y-4">
                   {selectedOrder.orderItems.map((item) => (
                     <div key={item.id} className="flex gap-3">
-                      <div className="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5">
+                      <div className="item-quantity w-6 h-6 rounded bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-900 shrink-0 mt-0.5">
                         {item.quantity}
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between">
-                          <p className="font-medium text-white text-sm">{item.itemName}</p>
-                          <p className="font-medium text-white text-sm">${Number(item.lineTotal).toFixed(2)}</p>
+                          <p className="item-name font-medium text-gray-900 text-sm">{item.itemName}</p>
+                          <p className="item-name font-medium text-gray-900 text-sm">${Number(item.lineTotal).toFixed(2)}</p>
                         </div>
                         {item.specialInstructions && (
-                          <p className="text-xs text-slate-400 mt-1">{item.specialInstructions}</p>
+                          <p className="text-xs text-gray-500 mt-1">{item.specialInstructions}</p>
                         )}
                         {item.modifiers && item.modifiers.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {item.modifiers.map((mod) => (
-                              <span key={mod.id} className="text-[10px] bg-[#1E293B] text-slate-300 px-1.5 py-0.5 rounded border border-[#334155]">
+                              <span key={mod.id} className="item-modifier text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">
                                 {mod.modifierName}
                               </span>
                             ))}
@@ -545,10 +546,10 @@ const OrdersPage: React.FC = () => {
 
                   {selectedOrder.internalNotes && (
                     <>
-                      <div className="h-px bg-[#334155] my-2"></div>
-                      <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg">
-                        <p className="text-xs text-yellow-500 font-bold mb-1"><i className="fa-solid fa-note-sticky mr-1"></i> Kitchen Note</p>
-                        <p className="text-xs text-yellow-200">{selectedOrder.internalNotes}</p>
+                      <div className="divider h-px bg-gray-200 my-2"></div>
+                      <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                        <p className="text-xs text-yellow-600 font-bold mb-1"><i className="fa-solid fa-note-sticky mr-1"></i> Kitchen Note</p>
+                        <p className="text-xs text-yellow-800">{selectedOrder.internalNotes}</p>
                       </div>
                     </>
                   )}
@@ -556,52 +557,52 @@ const OrdersPage: React.FC = () => {
               </div>
 
               {/* Footer Totals & Actions */}
-              <div className="p-5 bg-[#0B1120] border-t border-[#1E293B]">
+              <div className="panel-footer p-5 bg-gray-50 border-t border-gray-200">
                 <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm text-slate-400">
+                  <div className="totals-row flex justify-between text-sm text-gray-500">
                     <span>Subtotal</span>
                     <span>${Number(selectedOrder.subtotal).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-slate-400">
+                  <div className="totals-row flex justify-between text-sm text-gray-500">
                     <span>Tax (8%)</span>
                     <span>${Number(selectedOrder.taxAmount).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-slate-400">
+                  <div className="totals-row flex justify-between text-sm text-gray-500">
                     <span>Discount</span>
                     <span>${Number(selectedOrder.discountAmount).toFixed(2)}</span>
                   </div>
-                  <div className="h-px bg-[#1E293B] my-2"></div>
+                  <div className="divider h-px bg-gray-200 my-2"></div>
                   <div className="flex justify-between items-end">
-                    <span className="text-base font-bold text-white">Total</span>
-                    <span className="text-2xl font-bold text-blue-400">${Number(selectedOrder.totalAmount).toFixed(2)}</span>
+                    <span className="totals-total-label text-base font-bold text-gray-900">Total</span>
+                    <span className="totals-total-value text-2xl font-bold text-blue-600">${Number(selectedOrder.totalAmount).toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2 mb-4">
-                  <div className={`flex flex-col items-center justify-center p-2 rounded cursor-pointer ${
+                  <div className={`payment-option flex flex-col items-center justify-center p-2 rounded cursor-pointer ${
                     selectedOrder.paymentStatus === 'paid' 
-                      ? 'bg-[#151E32] border-2 border-blue-500' 
-                      : 'bg-[#151E32] border border-[#334155] text-slate-400 hover:bg-[#1E293B]'
+                      ? 'selected bg-white border-2 border-blue-500' 
+                      : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-100'
                   }`}>
                     <i className={`fa-brands fa-cc-visa text-lg mb-1 ${selectedOrder.paymentStatus === 'paid' ? 'text-blue-500' : ''}`}></i>
                     <span className={`text-[10px] font-medium ${selectedOrder.paymentStatus === 'paid' ? 'font-bold text-blue-500' : ''}`}>Card</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center p-2 rounded bg-[#151E32] border border-[#334155] text-slate-400 hover:bg-[#1E293B] cursor-pointer">
+                  <div className="payment-option flex flex-col items-center justify-center p-2 rounded bg-white border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer">
                     <i className="fa-solid fa-money-bill text-lg mb-1"></i>
                     <span className="text-[10px] font-medium">Cash</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center p-2 rounded bg-[#151E32] border border-[#334155] text-slate-400 hover:bg-[#1E293B] cursor-pointer">
+                  <div className="payment-option flex flex-col items-center justify-center p-2 rounded bg-white border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer">
                     <i className="fa-solid fa-ticket text-lg mb-1"></i>
                     <span className="text-[10px] font-medium">Voucher</span>
                   </div>
-                  <div className="flex flex-col items-center justify-center p-2 rounded bg-[#151E32] border border-[#334155] text-slate-400 hover:bg-[#1E293B] cursor-pointer">
+                  <div className="payment-option flex flex-col items-center justify-center p-2 rounded bg-white border border-gray-200 text-gray-500 hover:bg-gray-100 cursor-pointer">
                     <i className="fa-solid fa-ellipsis text-lg mb-1"></i>
                     <span className="text-[10px] font-medium">Other</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="py-3 rounded-xl bg-[#151E32] text-white font-semibold border border-[#334155] hover:bg-[#1E293B] shadow-sm transition-all">
+                  <button className="panel-btn py-3 rounded-xl bg-white text-gray-900 font-semibold border border-gray-200 hover:bg-gray-100 shadow-sm transition-all">
                     <i className="fa-solid fa-print mr-2"></i>Reprint Receipt
                   </button>
                   <button 

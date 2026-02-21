@@ -317,4 +317,33 @@ export class AuthService {
       tenant: user.tenant,
     };
   }
+
+  /**
+   * Get tenant theme settings by subdomain (public endpoint)
+   */
+  async getTenantTheme(subdomain: string): Promise<{
+    primaryColor: string;
+    businessName: string;
+  }> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { subdomain },
+      select: {
+        businessName: true,
+        metadata: true,
+      },
+    });
+
+    if (!tenant) {
+      throw new UnauthorizedException('Tenant not found');
+    }
+
+    // Extract theme from metadata or use default
+    const metadata = tenant.metadata as Record<string, any> || {};
+    const theme = metadata.theme || {};
+
+    return {
+      primaryColor: theme.primaryColor || '#2563eb',
+      businessName: tenant.businessName,
+    };
+  }
 }
